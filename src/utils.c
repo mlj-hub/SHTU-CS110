@@ -5,10 +5,10 @@
 #include "utils.h"
 
 uint32_t cmd_num = 0; /*indicate number of the input cmd*/
-uint32_t cmd_data[MAX_CMD_NUMBER]; /*array which store the cmd in uint32_t form*/
 
 /*handle the input file*/
-void input_handler(FILE * input_file){
+uint32_t * input_handler(FILE * input_file){
+    uint32_t * cmd_data = (uint32_t *)calloc(sizeof(uint32_t),MAX_CMD_NUMBER);  /*array which store the cmd in uint32_t form*/
     char data;  /*used to store the character read from the input file*/
     uint32_t i,index; /*i for bit shift operation and index indicate the writing position of cmd_data*/
     uint32_t cmd=0;/*used to store the cmd*/
@@ -33,5 +33,9 @@ void input_handler(FILE * input_file){
     }
     /*update the number of cmd*/
     cmd_num = index;
+    return cmd_data;
 }
 
+void output_handler(cmd_info_t  * cmd_info){
+    (void ) cmd_info;
+}
