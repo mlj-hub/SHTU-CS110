@@ -50,11 +50,15 @@ static void print_usage_and_exit() {
 int translate(const char*in, const char*out){
     FILE *input, *output;
     int err = 0;
+    uint32_t * input_data;
+    cmd_info_t * output_data;
     if (in){    /* correct input file name */
         if(open_files(&input, &output, in, out) != 0)
             exit(1);
         /* handle input file */
-        input_handler(input);
+        input_data=input_handler(input);
+        output_data = compress(input_data);
+        output_handler(output_data);
         /* write correct result to the output file */
         /* ... */
         close_files(&input, &output);
