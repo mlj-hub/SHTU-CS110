@@ -15,6 +15,38 @@
 
 #include "translator.h"
 
+uint32_t cmd_num = 0; /*indicate number of the input cmd*/
+uint32_t cmd_data[MAX_CMD_NUMBER]; /*array which store the cmd in uint32_t form*/
+
+
+/*handle the input file*/
+void input_handler(FILE * input_file){
+    char data;  /*used to store the character read from the input file*/
+    uint32_t i,index; /*i for bit shift operation and index indicate the writing position of cmd_data*/
+    uint32_t cmd=0;/*used to store the cmd*/
+    i=31;index=0;
+    data = fgetc(input_file);
+    /*loop to read in all cmd */
+    while(data!=EOF){
+        /*handle with \n, space, \t or etc */
+        if(data!='0' && data!='1'){
+            if(cmd)
+                cmd_data[index++]=cmd;
+            i=31;
+            cmd = 0;
+        }
+        /*read in bits, shift them then adding to cmd*/
+        else{
+            cmd|=((data-'0')<<i);
+            i--;
+        }
+        /*read character from file*/
+        data = fgetc(input_file);
+    }
+    /*update the number of cmd*/
+    cmd_num = index;
+}
+
 /*check if file can be correctly opened */
 static int open_files(FILE** input, FILE** output, const char* input_name, const char* output_name){ 
     *input = fopen(input_name, "r");
@@ -53,7 +85,8 @@ int translate(const char*in, const char*out){
     if (in){    /* correct input file name */
         if(open_files(&input, &output, in, out) != 0)
             exit(1);
-        /* ... */
+        /* handle input file */
+        input_handler(input);
         /* write correct result to the output file */
         /* ... */
         close_files(&input, &output);
