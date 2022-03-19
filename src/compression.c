@@ -6,7 +6,7 @@
 #include "compression.h"
 #include "utils.h"
 
-void R_compress(cmd_info_t * cmd_info){
+void CR_compress(cmd_info_t * cmd_info){
     (void) cmd_info;
 }
 
@@ -81,6 +81,8 @@ cmd_state_t LI_check(uint32_t cmd){
     /*incompressible if offset is negative or the least two significant bits is non-zero */
     if(imm12 < 0 || (imm12>>10))
         return INCOMPRESSIBLE;
+    if(imm12 % 4!=0)
+        return INCOMPRESSIBLE;
     /*otherwise compressible*/
     return COMPRESSIBLE;
 }
@@ -106,6 +108,8 @@ cmd_state_t S_check(uint32_t cmd){
         return INCOMPRESSIBLE;
     /*incompressible if offset is negative or the least two significant bits is non-zero */
     if(imm12 < 0 || (imm12>>10))
+        return INCOMPRESSIBLE;
+    if(imm12 % 4!=0)
         return INCOMPRESSIBLE;
     /*otherwise compressible*/
     return COMPRESSIBLE;
@@ -134,21 +138,6 @@ cmd_state_t JI_check(uint32_t cmd){
 }
 
 cmd_state_t U_check(uint32_t cmd){
-    /*
-    uint32_t rd = (cmd>>7)&REGISTER;
-    int32_t  imm20 = (cmd>>12)&IMM20;
-    if (!imm20 && !rd && rd!=2)
-        return INCOMPRESSIBLE;
-    if(imm20>0 && !(imm20>>5)){
-        return COMPRESSIBLE;
-    }
-    else if (imm20 < 0){
-
-    }
-    else{
-        return INCOMPRESSIBLE;
-    }
-    */
     (void) cmd;
     return 0;
 }

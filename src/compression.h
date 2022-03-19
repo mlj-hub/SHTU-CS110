@@ -17,6 +17,17 @@ typedef enum{
 }RISCV_Format_e;
 
 typedef enum{
+    CR ,
+    CI ,
+    CL ,
+    CS_T1 ,
+    CS_T2 ,
+    CB_T1 ,
+    CB_T2 ,
+    CJ
+}RVC_Format_e;
+
+typedef enum{
     UNSURE,
     COMPRESSIBLE,
     INCOMPRESSIBLE
@@ -26,6 +37,7 @@ typedef struct{
     uint32_t cmd;
     cmd_state_t  state;
     RISCV_Format_e format;
+    RVC_Format_e  c_format;
 }cmd_info_t;
 
 #define REGISTER 0x1f
