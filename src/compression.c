@@ -7,7 +7,61 @@
 #include "utils.h"
 
 void CR_compress(cmd_info_t * cmd_info){
-    (void) cmd_info;
+    /*initiaize of the parameters in CR */
+    uint32_t CR_funct4 = 0;
+    uint32_t CR_rdORrs1 = 0;
+    uint32_t CR_rs2 = 0;
+    uint32_t CR_op= 0;
+
+    /*if the RISCV32 command is R,then in CR_compress the command is [add] */
+    if (cmd_info->format == R)
+    {
+        /*get the parameters of the old value according to the format*/
+        uint32_t Old_rd = (cmd_info->cmd>>7)&REGISTER;
+        uint32_t Old_rs1 = (cmd_info->cmd>>15)&REGISTER;
+        uint32_t Old_rs2 = (cmd_info->cmd>20)&REGISTER;
+        if (Old_rd == Old_rs1)
+        {
+            /*the cmd is [c.add]*/
+            CR_funct4 = 0x9;
+            CR_rdORrs1 = Old_rd;
+            CR_rs2 = Old_rs2;
+            CR_op = 0x2;
+
+        }
+        else
+        {
+            CR_funct4 = 0x8;
+            CR_rdORrs1 = Old_rd;
+            CR_rs2 = Old_rs2;
+            CR_op = 0x2;
+            /* the cmd is [c.mv]*/
+        }
+    }
+    /* if the RISCV32 command is I,then in CR_compress the command is [jalr]*/
+    else
+    {
+        uint32_t Old_rd = (cmd_info->cmd>>7)&REGISTER;
+        if (Old_rd == 0x0)
+        {
+            /* the cmd is [c.jr] */
+            CR_funct4 = 0x8;
+            CR_rdORrs1 = Old_rd;
+            CR_rs2 = 0;
+            CR_op = 0x2;
+        }
+        else
+        {
+            CR_funct4 = 0x9;
+            CR_rdORrs1 = Old_rd;
+            CR_rs2 = 0;
+            CR_op = 0x2;
+            /* the cmd is [c.jalr] */
+        }
+    }
+    /*change the 32-bit code in the cmd_info*/
+    cmd_info->cmd = CR_op + (CR_rs2<<2) + (CR_rdORrs1<<7)+(CR_funct4<<12);
+
 }
 
 /*check add,and,or,xor,sub*/
