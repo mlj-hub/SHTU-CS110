@@ -11,7 +11,8 @@ void CR_compress(cmd_info_t * cmd_info){
 }
 
 /*check add,and,or,xor,sub*/
-cmd_state_t R_check(uint32_t cmd){
+void R_check(cmd_info_t * cmd_info){
+    uint32_t cmd = cmd_info->cmd;
     /*get parameters according to the format*/
     uint32_t rd = (cmd>>7)&REGISTER;
     uint32_t funct3 = (cmd>>12)&FUNCT3;
@@ -24,36 +25,38 @@ cmd_state_t R_check(uint32_t cmd){
         case 0x0:
             /*add*/
             if(funct7 == 0x0){
-                /*c.add*/
-                if(rd == rs1 && rd && rs2){
-                    return COMPRESSIBLE;
+                /*c.add and c.mv*/
+                if((rd == rs1 || !rs1) && rd && rs2){
+                    cmd_info->state = COMPRESSIBLE;
+                    cmd_info->c_format = CR;
+                    return ;
                 }
-                /*c.mv*/
-                if(rs1 == 0 && rd && rs2){
-                    return COMPRESSIBLE;
-                }
-                /*cannot be compressed*/
-                return INCOMPRESSIBLE;
             }
             /*sub*/
             else{
-                if(rd==rs1)
-                    return COMPRESSIBLE;
-                return INCOMPRESSIBLE;
+                if(rd==rs1){
+                    cmd_info->state = COMPRESSIBLE;
+                    cmd_info->c_format = CS_T2;
+                    return;
+                }
             }
-            /*otherwise, it is incompressible*/
+            /*cannot be compressed*/
+            cmd_info-> state = INCOMPRESSIBLE;
             break;
         /*xor,and,or share the same condition when compressible*/
         case 0x4:
         case 0x5:
         case 0x6:
             /*compressible only when rd is same with rs1*/
-            if(rd==rs1)
-                return COMPRESSIBLE;
-            return INCOMPRESSIBLE;
+            if(rd==rs1){
+                cmd_info -> state = COMPRESSIBLE;
+                cmd_info -> c_format = CS_T2;
+                return ;
+            }
+            cmd_info->state = INCOMPRESSIBLE;
             break;
         default:
-            return INCOMPRESSIBLE;
+            cmd_info->state = INCOMPRESSIBLE;
     }
 }
 
@@ -63,7 +66,8 @@ cmd_state_t I_check(uint32_t cmd){
 }
 
 /*check lw*/
-cmd_state_t LI_check(uint32_t cmd){
+void LI_check(cmd_info_t * cmd_info){
+    uint32_t cmd = cmd_info->cmd;
     /*get parameters according to format*/
     uint32_t rd = (cmd>>7)&REGISTER;
     uint32_t rs1 = (cmd>>15)&REGISTER;
@@ -71,24 +75,26 @@ cmd_state_t LI_check(uint32_t cmd){
     uint32_t funct3 = (cmd>>12)&FUNCT3;
     /*check whether it is lw*/
     if(funct3 != 0x2)
-        return INCOMPRESSIBLE;
+        cmd_info->state = INCOMPRESSIBLE;
     /*check whether rs1 is between x8-x15*/
-    if(rs1>=16 || rs1<=7)
-        return INCOMPRESSIBLE;
+    else if(rs1>=16 || rs1<=7)
+        cmd_info->state = INCOMPRESSIBLE;
     /*check whether rd is between x8-x15*/
-    if(rd>=16 || rd<=7)
-        return INCOMPRESSIBLE;
+    else if(rd>=16 || rd<=7)
+        cmd_info->state = INCOMPRESSIBLE;
     /*incompressible if offset is negative or the least two significant bits is non-zero */
-    if(imm12 < 0 || (imm12>>10))
-        return INCOMPRESSIBLE;
-    if(imm12 % 4!=0)
-        return INCOMPRESSIBLE;
+    else if(imm12 < 0 || (imm12>>10))
+        cmd_info->state = INCOMPRESSIBLE;
+    else if(imm12 % 4!=0)
+        cmd_info->state = INCOMPRESSIBLE;
     /*otherwise compressible*/
-    return COMPRESSIBLE;
+    else
+        cmd_info->state = COMPRESSIBLE;
 }
 
 /*check sw*/
-cmd_state_t S_check(uint32_t cmd){
+void S_check(cmd_info_t * cmd_info){
+    uint32_t cmd = cmd_info ->cmd;
     /*get parameters according to format*/
     int32_t imm12 = 0;
     uint32_t funct3 = (cmd>>12)&FUNCT3;
@@ -99,20 +105,21 @@ cmd_state_t S_check(uint32_t cmd){
     imm12 |= (cmd>>25)&IMM7;
     /*check whether the cmd is sw*/
     if(funct3 != 0x2)
-        return INCOMPRESSIBLE;
+        cmd_info->state = INCOMPRESSIBLE;
     /*check whether rs1 is between x8-x15*/
-    if(rs1>=16 || rs1<=7)
-        return INCOMPRESSIBLE;
+    else if(rs1>=16 || rs1<=7)
+        cmd_info->state = INCOMPRESSIBLE;
     /*check whether rs2 is between x8-x15*/
-    if(rs2>=16 || rs2<=7)
-        return INCOMPRESSIBLE;
+    else if(rs2>=16 || rs2<=7)
+        cmd_info->state = INCOMPRESSIBLE;
     /*incompressible if offset is negative or the least two significant bits is non-zero */
-    if(imm12 < 0 || (imm12>>10))
-        return INCOMPRESSIBLE;
-    if(imm12 % 4!=0)
-        return INCOMPRESSIBLE;
+    else if(imm12 < 0 || (imm12>>10))
+        cmd_info->state = INCOMPRESSIBLE;
+    else if(imm12 % 4!=0)
+        cmd_info->state = INCOMPRESSIBLE;
     /*otherwise compressible*/
-    return COMPRESSIBLE;
+    else
+        cmd_info->state = COMPRESSIBLE;
 }
 
 cmd_state_t SB_check(uint32_t cmd){
@@ -121,7 +128,8 @@ cmd_state_t SB_check(uint32_t cmd){
 }
 
 /*check jalr*/
-cmd_state_t JI_check(uint32_t cmd){
+void JI_check(cmd_info_t * cmd_info){
+    uint32_t cmd = cmd_info -> cmd;
     /*get parameters according to the format*/
     uint32_t funct3 = (cmd>>12)&FUNCT3;
     uint32_t rd = (cmd>>7)&REGISTER;
@@ -129,12 +137,12 @@ cmd_state_t JI_check(uint32_t cmd){
     int32_t  imm12 = (cmd>>20)&IMM12;
     /*check funct3 to determine whether the command is jalr*/
     if(funct3 != 0x0)
-        return INCOMPRESSIBLE;
+        cmd_info->state = INCOMPRESSIBLE;
     /*incompressible if imm is non-zero or rs1 is x0 or rd is not x0 or x1 */
-    if(imm12 || !rs1 || rd>=2){
-        return INCOMPRESSIBLE;
-    }
-    return COMPRESSIBLE;
+    else if(imm12 || !rs1 || rd>=2)
+        cmd_info->state =INCOMPRESSIBLE;
+    else
+        cmd_info->state= COMPRESSIBLE;
 }
 
 cmd_state_t U_check(uint32_t cmd){
@@ -164,7 +172,7 @@ void format_compressible_check(cmd_info_t * cmd_info,uint32_t * cmd_data){
             /*R type, check whether compressible*/
             case R:
                 cmd_info[i].format = R;
-                cmd_info[i].state = R_check(cmd_info[i].cmd);
+                R_check(&cmd_info[i]);
                 break;
             /*I type, check whether compressible*/
             case I:
@@ -174,7 +182,7 @@ void format_compressible_check(cmd_info_t * cmd_info,uint32_t * cmd_data){
             /*LI type, check whether compressible*/
             case LI:
                 cmd_info[i].format = LI;
-                cmd_info[i].state = LI_check(cmd_info[i].cmd);
+                LI_check(&cmd_info[i]);
                 break;
             /*U type, check whether compressible*/
             case U:
@@ -184,7 +192,7 @@ void format_compressible_check(cmd_info_t * cmd_info,uint32_t * cmd_data){
             /*S type, check whether compressible*/
             case S:
                 cmd_info[i].format = S;
-                cmd_info[i].state = S_check(cmd_info[i].cmd);
+                S_check(&cmd_info[i]);
                 break;
             /*SB type, check whether compressible*/
             case SB:
@@ -199,7 +207,7 @@ void format_compressible_check(cmd_info_t * cmd_info,uint32_t * cmd_data){
             /*JI type, check whether compressible*/
             case JI:
                 cmd_info[i].format = JI;
-                cmd_info[i].state = JI_check(cmd_info[i].cmd);
+                JI_check(&cmd_info[i]);
                 break;
             /*otherwise*/
             default:
