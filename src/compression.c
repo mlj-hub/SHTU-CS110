@@ -86,9 +86,9 @@ void R_check(cmd_info_t * cmd_info){
                     return ;
                 }
             }
-            /*sub*/
+            /*c.sub*/
             else{
-                if(rd==rs1){
+                if(rd==rs1 && rd>=8 && rd<=15){
                     cmd_info->state = COMPRESSIBLE;
                     cmd_info->c_format = CS_T2;
                     return;
@@ -102,7 +102,7 @@ void R_check(cmd_info_t * cmd_info){
         case 0x5:
         case 0x6:
             /*compressible only when rd is same with rs1*/
-            if(rd==rs1){
+            if(rd==rs1 && rd<=15 && rd>=8){
                 cmd_info -> state = COMPRESSIBLE;
                 cmd_info -> c_format = CS_T2;
                 return ;
@@ -149,7 +149,7 @@ void I_check(cmd_info_t * cmd_info){
             break;
         /*srli or srai*/
         case 0x5:
-            if(rd == rs1 && ((cmd>>20)&0x20) ==0 ){
+            if(rd == rs1 && ((cmd>>20)&0x20) ==0 && rd>=8 && rd<=15){
                 cmd_info -> c_format = CB_T2;
                 cmd_info -> state = COMPRESSIBLE;
                 return;
@@ -159,7 +159,7 @@ void I_check(cmd_info_t * cmd_info){
         /*andi*/
         case 0x7:
             /*c.andi rd=rs1, -32<=imm12<=31*/
-            if(rd==rs1 && -32<=imm12 && imm12<=31){
+            if(rd==rs1 && -32<=imm12 && imm12<=31 && rd>=8 && rd<=15){
                 cmd_info->state = COMPRESSIBLE;
                 cmd_info->c_format = CB_T2;
                 return;
@@ -195,8 +195,10 @@ void LI_check(cmd_info_t * cmd_info){
     else if(imm12 % 4!=0)
         cmd_info->state = INCOMPRESSIBLE;
     /*otherwise compressible*/
-    else
+    else{
         cmd_info->state = COMPRESSIBLE;
+        cmd_info->c_format = CL;
+    }
 }
 
 /*check sw*/
@@ -225,8 +227,10 @@ void S_check(cmd_info_t * cmd_info){
     else if(imm12 % 4!=0)
         cmd_info->state = INCOMPRESSIBLE;
     /*otherwise compressible*/
-    else
+    else{
         cmd_info->state = COMPRESSIBLE;
+        cmd_info ->c_format = CS_T1;
+    }
 }
 
 cmd_state_t SB_check(uint32_t cmd){
