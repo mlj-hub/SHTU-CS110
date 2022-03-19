@@ -19,7 +19,7 @@ typedef enum{
 typedef enum{
     UNSURE,
     COMPRESSIBLE,
-    INCPMPRESSIBLE
+    INCOMPRESSIBLE
 }cmd_state_t;
 
 typedef struct{
@@ -28,9 +28,13 @@ typedef struct{
     RISCV_Format_e format;
 }cmd_info_t;
 
-#define REGISTER 0x1f;
+#define REGISTER 0x1f
 #define FUNCT3 0x07
 #define FUNCT7 0x7f
+#define IMM20 0xfffff
+#define IMM12 0xfff
+#define IMM7  0x7f
+#define IMM5  0x1f
 
 cmd_info_t * compress(uint32_t *);
 #endif
