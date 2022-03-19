@@ -60,9 +60,62 @@ void R_check(cmd_info_t * cmd_info){
     }
 }
 
-cmd_state_t I_check(uint32_t cmd){
-    (void) cmd;
-    return 0;
+void I_check(cmd_info_t * cmd_info){
+    uint32_t cmd = cmd_info -> cmd;
+    uint32_t rd = (cmd>>7)&REGISTER;
+    uint32_t rs1 = (cmd>>15)&REGISTER;
+    uint32_t funct3 = (cmd>>12)&FUNCT3;
+    int32_t  imm12 = (cmd>>20)&IMM12;
+    switch(funct3){
+        /*addi*/
+        case 0x0:
+            /*c.li rd!=0,rs1=0,-32<=imm12<=31*/
+            if(rd && !rs1 && imm12<=31 && imm12>=-32){
+                cmd_info->state = COMPRESSIBLE;
+                cmd_info->c_format = CI;
+                return;
+            }
+            /*c.addi rd=rs1!=0, imm!=0*/
+            else if(rd==rs1 && !rd && !imm12 && imm12<=31 && imm12>=-32){
+                cmd_info->state = COMPRESSIBLE;
+                cmd_info->c_format = CI;
+                return;
+            }
+            /*otherwise it is incompressible*/
+            cmd_info ->state = INCOMPRESSIBLE;
+            break;
+        /*slli*/
+        case 0x1:
+            if(((cmd>>20)&0x20) ==0 && rd==rs1 && !rd){
+                cmd_info -> c_format = CI;
+                cmd_info -> state = COMPRESSIBLE;
+                return;
+            }
+            cmd_info->state = INCOMPRESSIBLE;
+            break;
+        /*srli or srai*/
+        case 0x5:
+            if(rd == rs1 && ((cmd>>20)&0x20) ==0 ){
+                cmd_info -> c_format = CB_T2;
+                cmd_info -> state = COMPRESSIBLE;
+                return;
+            }
+            cmd_info->state = INCOMPRESSIBLE;
+            break;
+        /*andi*/
+        case 0x7:
+            /*c.andi rd=rs1, -32<=imm12<=31*/
+            if(rd==rs1 && -32<=imm12 && imm12<=31){
+                cmd_info->state = COMPRESSIBLE;
+                cmd_info->c_format = CB_T2;
+                return;
+            }
+            cmd_info -> state = INCOMPRESSIBLE;
+            break;
+        default:
+            cmd_info -> state = INCOMPRESSIBLE;
+    }
+
 }
 
 /*check lw*/
@@ -177,7 +230,7 @@ void format_compressible_check(cmd_info_t * cmd_info,uint32_t * cmd_data){
             /*I type, check whether compressible*/
             case I:
                 cmd_info[i].format = I;
-                cmd_info[i].state = I_check(cmd_info[i].cmd);
+                I_check(&cmd_info[i]);
                 break;
             /*LI type, check whether compressible*/
             case LI:
