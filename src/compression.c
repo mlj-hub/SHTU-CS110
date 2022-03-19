@@ -39,7 +39,7 @@ void CR_compress(cmd_info_t * cmd_info){
         }
     }
     /* if the RISCV32 command is I,then in CR_compress the command is [jalr]*/
-    else
+    else if(cmd_info->format == I)
     {
         uint32_t Old_rd = (cmd_info->cmd>>7)&REGISTER;
         if (Old_rd == 0x0)
@@ -61,9 +61,93 @@ void CR_compress(cmd_info_t * cmd_info){
     }
     /*change the 32-bit code in the cmd_info*/
     cmd_info->cmd = CR_op + (CR_rs2<<2) + (CR_rdORrs1<<7)+(CR_funct4<<12);
+    return;
 
 }
+void CS_compress(cmd_info_t * cmd_info)
+{
+    /*if the RISCV32 command is S,then in CS_compress the command is [sw] */
+    if (cmd_info->format == S)
+    {
+        /*parameters of the RISCV-16  Command CS_T1*/
+        uint32_t CS_T1_funct3 = 0;
+        uint32_t CS_T1_IMM3 = 0;
+        uint32_t CS_T1_RS1 = 0;
+        uint32_t CS_T1_IMM2 = 0;
+        uint32_t CS_T1_RS2 = 0;
+        uint32_t CS_T1_OP = 0;
+        /*parameters of the RISCV-32 Command CS_T2*/
+        uint32_t Old_imm12 = 0;
+        uint32_t Old_rs1 = (cmd_info->cmd>>15)&REGISTER;
+        uint32_t Old_rs2 = (cmd_info->cmd>>20)&REGISTER;
+        /*get imm from two part of the cmd*/
+        Old_imm12 |= (cmd_info->cmd>>7)&IMM5;
+        Old_imm12 |= (cmd_info->cmd>>25)&IMM7;
+        /* the  cmd is [c.sub]*/
+        CS_T1_funct3 = 6;
+        CS_T1_RS1 = Old_rs1-8;
+        CS_T1_RS2 = Old_rs2-8;
+        /*get the offset[5:3] of given imm*/
+        CS_T1_IMM3 = (Old_imm12 >> 3) & 0x7;
+        /*get the offset[2|6] of given imm*/
+        CS_T1_IMM2 += ((Old_imm12 >> 2) & 0x1) <<1 ;
+        CS_T1_IMM2 += (Old_imm12 >> 6) & 0x1;
+        /* change the cmd*/
+        cmd_info->cmd = (CS_T1_OP) + (CS_T1_RS2 << 2) + (CS_T1_IMM2 << 5) + \
+                        (CS_T1_RS1<<7) + (CS_T1_IMM3 << 10) + (CS_T1_funct3<< 13);
+        return;
 
+    }
+    /*if the RISCV32 command is R,then in CS_compress the command into CS Type2 */
+    else if (cmd_info->format == R)
+    {
+        /*parameters of the RISCV-16 CS Command [c.sw]*/
+
+        uint32_t Old_funct3 = (cmd_info->cmd>>12)&FUNCT3;
+        uint32_t Old_rs1 = (cmd_info->cmd>>15)&REGISTER;
+        uint32_t Old_rs2 = (cmd_info->cmd>>20)&REGISTER;
+        uint32_t Old_funct7 = (cmd_info->cmd>>25)&FUNCT7;
+
+        uint32_t CS_T2_funct6 = 0x23;
+        uint32_t CS_T2_RDorRS1 = Old_rs1 - 8;
+        uint32_t CS_T2_funct2 = 0;
+        uint32_t CS_T2_RS2 = Old_rs2 - 8;
+        uint32_t CS_T2_OP = 1;
+
+        if (Old_funct7 == 0)
+        {
+            /* the RISCV16 cmmmand is [c.and] [c.or] [c.xor]*/
+            switch(Old_funct3)
+            {
+                case 7:
+                /* and */
+                CS_T2_funct2 = 3;
+                break;
+                case 6:
+                CS_T2_funct2 = 2;
+                /* or */
+                break;
+                case 4:
+                CS_T2_funct2 = 1;
+                /* xor*/
+                break;
+            }
+        }
+        else
+        {
+            /* the RISCV16 command is [c.sub] */
+            CS_T2_funct2 = 0;
+        }
+        /*change the value of cmd*/
+        cmd_info->cmd = CS_T2_OP + (CS_T2_RS2<<2) + \
+            (CS_T2_funct2<<5) + (CS_T2_RDorRS1<<7) + \
+            (CS_T2_funct6<<10);
+        return;
+    }
+
+
+
+}
 /*check add,and,or,xor,sub*/
 void R_check(cmd_info_t * cmd_info){
     uint32_t cmd = cmd_info->cmd;
