@@ -39,7 +39,7 @@ void CR_compress(cmd_info_t * cmd_info){
         }
     }
     /* if the RISCV32 command is I,then in CR_compress the command is [jalr]*/
-    else
+    else if(cmd_info->format == I)
     {
         uint32_t Old_rd = (cmd_info->cmd>>7)&REGISTER;
         if (Old_rd == 0x0)
@@ -61,9 +61,55 @@ void CR_compress(cmd_info_t * cmd_info){
     }
     /*change the 32-bit code in the cmd_info*/
     cmd_info->cmd = CR_op + (CR_rs2<<2) + (CR_rdORrs1<<7)+(CR_funct4<<12);
+    return;
 
 }
+void CS_compress(cmd_info_t * cmd_info)
+{
+    /*if the RISCV32 command is S,then in CS_compress the command is [sw] */
+    if (cmd_info->format == S)
+    {
+        /*parameters of the RISCV-16  Command CS_T1*/
+        uint32_t CS_T1_funct3 = 0;
+        uint32_t CS_T1_IMM3 = 0;
+        uint32_t CS_T1_RS1 = 0;
+        uint32_t CS_T1_IMM2 = 0;
+        uint32_t CS_T1_RS2 = 0;
+        uint32_t CS_T1_OP = 0;
+        /*parameters of the RISCV-32 Command CS_T2*/
+        uint32_t Old_imm12 = 0;
+        uint32_t Old_funct3 = (cmd_info->cmd>>12)&FUNCT3;
+        uint32_t Old_rs1 = (cmd_info->cmd>>15)&REGISTER;
+        uint32_t Old_rs2 = (cmd_info->cmd>>20)&REGISTER;
+        /*get imm from two part of the cmd*/
+        Old_imm12 |= (cmd_info->cmd>>7)&IMM5;
+        Old_imm12 |= (cmd_info->cmd>>25)&IMM7;
 
+
+    }
+    /*if the RISCV32 command is R,then in CS_compress the command into CS Type2 */
+    else if (cmd_info->format == R)
+    {
+        /*parameters of the RISCV-16 CS Command [c.sw]*/
+        uint32_t CS_T2_funct6 = 0;
+        uint32_t CS_T2_RDorRS1 = 0;
+        uint32_t CS_T2_funct2 = 0;
+        uint32_t CS_T2_RS2 = 0;
+        uint32_t CS_T2_OP = 0;
+
+        uint32_t Old_rd = (cmd_info->cmd>>7)&REGISTER;
+        uint32_t Old_funct3 = (cmd_info->cmd>>12)&FUNCT3;
+        uint32_t Old_rs1 = (cmd_info->cmd>>15)&REGISTER;
+        uint32_t Old_rs2 = (cmd_info->cmd>>20)&REGISTER;
+        uint32_t Old_funct7 = (cmd_info->cmd>>25)&FUNCT7;
+
+
+    }
+
+
+
+
+}
 /*check add,and,or,xor,sub*/
 cmd_state_t R_check(uint32_t cmd){
     /*get parameters according to the format*/
