@@ -36,6 +36,28 @@ uint32_t * input_handler(FILE * input_file){
     return cmd_data;
 }
 
-void output_handler(cmd_info_t  * cmd_info){
-    (void ) cmd_info;
+void output_handler(cmd_info_t  * cmd_info,FILE * output_file){
+    uint32_t i = 0;
+    uint32_t cmd;
+    for(i=0;i<cmd_num;i++){
+        uint32_t j=0;
+        uint8_t bit;
+        cmd = cmd_info[i].cmd;
+        if(cmd_info[i].state ==INCOMPRESSIBLE){
+            for(j=0;j<32;j++){
+                bit = ((cmd<<j)&HIGHEST_BIT)>>31;
+                fputc(bit+'0',output_file);
+            }
+            fputc('\n',output_file);
+        }
+        else{
+            cmd<<=16;
+            for(j=0;j<16;j++){
+                bit = ((cmd<<j)&HIGHEST_BIT)>>31;
+                fputc(((cmd<<j)&HIGHEST_BIT)+'0',output_file);
+            }
+            fputc('\n',output_file);
+        }
+    }
+    free(cmd_info);
 }

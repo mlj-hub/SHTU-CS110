@@ -58,7 +58,7 @@ int translate(const char*in, const char*out){
         /* handle input file */
         input_data=input_handler(input);
         output_data = compress(input_data);
-        output_handler(output_data);
+        output_handler(output_data,output);
         /* write correct result to the output file */
         /* ... */
         close_files(&input, &output);
