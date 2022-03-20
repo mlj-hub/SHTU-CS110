@@ -388,7 +388,7 @@ void I_check(cmd_info_t * cmd_info){
             break;
         /*slli*/
         case 0x1:
-            if(((cmd>>20)&0x20) ==0 && rd==rs1 && !rd){
+            if(((cmd>>20)&0x20) ==0 && rd==rs1 && rd!=0){
                 /*conditions when compressible*/
                 cmd_info -> c_format = CI;
                 cmd_info -> state = COMPRESSIBLE;
@@ -613,6 +613,15 @@ void handle_compressible(cmd_info_t * cmd_info){
     }
 }
 
+void get_uj_offset(uint32_t imm20,int32_t * offset){
+    *offset |=((imm20&0x7fe00)>>9); /*offset 10:1*/
+    *offset |=((imm20&0x100)<<2); /*offset 11*/
+    *offset |=((imm20&0xff)<<11); /*offset 19:12*/
+    *offset |=((imm20&0x80000));/*offset 20*/
+    /*set the rightest bit to 0*/
+    *offset<<=1;
+}
+
 void handle_unsure(cmd_info_t * cmd_info){
     /*initialize*/
     uint32_t i=0;
@@ -627,18 +636,16 @@ void handle_unsure(cmd_info_t * cmd_info){
         if(cmd_info[i].c_format == CJ){
             /*get rd and imm20*/
             uint32_t rd = (cmd>>7)&REGISTER;
-            uint32_t imm20 = (cmd>>12)&IMM20;
+            uint32_t imm20 = ((int32_t)cmd>>12)&SIGN_ALL;
             /*get offset*/
-            int32_t offset = 0;
+            int32_t offset = imm20&0xfff00000;
             /*get offset according to the green card*/
-            offset |=((imm20&0xff)<<12);
-            offset |=((imm20&0x100)<<3);
-            offset |=((imm20&0x7fe00)>>9);
-            offset |=(imm20&0x80000);
+            get_uj_offset(imm20,&offset);
             /*if offset> 0,tranverse below*/
             if(offset>0){
                 int32_t j=0;
-                for(j=0;j<(offset/4);j++){
+                int32_t temp = offset;
+                for(j=0;j<(temp/4);j++){
                     /*if compressible, offset minus 2*/
                     if(cmd_info[i+j].state == COMPRESSIBLE)
                         offset-=2;
@@ -647,49 +654,70 @@ void handle_unsure(cmd_info_t * cmd_info){
             /*if offset> 0,tranverse above*/
             else if (offset<0){
                 int32_t j=0;
-                for(j=-1;-j<-(offset/4);j--){
+                int32_t temp = offset;
+                for(j=-1;-j<-(temp/4);j--){
                     /*if compressible, offset plus 2*/
                     if(cmd_info[i+j].state == COMPRESSIBLE)
                         offset+=2;
                 }
             }
             /*get the new cmd*/
-            n_cmd|=((offset&0x20)>>3);
-            n_cmd|=((offset&0xe)<<2);
-            n_cmd|=((offset&0x80)>>1);
-            /*get new cmd*/
-            n_cmd|=((offset&0x40)<<1);
-            n_cmd|=((offset&0x400)>>2);
-            n_cmd|=((offset&0x300)<<1);
-            /*get new cmd*/
-            n_cmd|=((offset&0x10)<<6);
-            n_cmd|=((offset&0x800)<<1);
-            /*c.jal*/
-            if(rd)
-                n_cmd|=0x2000;
-            /*c.j*/
-            else
-                n_cmd|=0xa000;
-            /*if compressible, set new cmd*/
-            if(cmd_info[i].state==COMPRESSIBLE)
+            if(cmd_info[i].state == COMPRESSIBLE){
+                /*if compressible*/
+                n_cmd|=((offset&0x20)>>3);/*offset 5*/
+                n_cmd|=((offset&0xe)<<2); /*offset 3:1*/
+                n_cmd|=((offset&0x80)>>1); /*offset 7*/
+                /*get new cmd*/
+                n_cmd|=((offset&0x40)<<1);/*offset 6*/
+                n_cmd|=((offset&0x400)>>2);/*offset 10*/
+                n_cmd|=((offset&0x300)<<1);/*offset 9:8*/
+                /*get new cmd*/
+                n_cmd|=((offset&0x10)<<6);/*offset 4*/
+                n_cmd|=(offset&0x800); /*offset 11*/
+                /*c.jal*/
+                if(rd)
+                    n_cmd|=0x2000;
+                /*c.j*/
+                else
+                    n_cmd|=0xa000;
+                /*if compressible, set new cmd*/
                 cmd_info[i].cmd = n_cmd;
+            }
+            else{
+                /*set n_offset*/
+                uint32_t n_offset=0;
+                /*offset 19:12*/
+                n_offset |=((offset&0xff000));
+                /*offset 11*/
+                n_offset |=((offset&800)<<9);
+                /*offset 10:1*/
+                n_offset |=((offset&0x7fe)<<20);
+                /*offset 20*/
+                n_offset |=((offset&80000)<<11);
+                /*clear old offset*/
+                cmd_info[i].cmd&=0xfff;
+                /*set new offset*/
+                cmd_info[i].cmd|=n_offset;
+            }
         }
         /*c.beqz and c.bnez*/
         else if(cmd_info[i].c_format == CB_T1){
             /*set rd to the required one*/
             uint32_t rd = ((cmd>>15)&REGISTER)-8;
-            int32_t offset =0;
             /*set funct3*/
             uint32_t funct3=(cmd>>12)&FUNCT3;
-            /*get offset*/
-            offset |=((cmd&0x80)<<4);
-            offset |=((cmd&0xf00)>>7);
-            offset |=((cmd&0x7e000000)>>20);
-            offset |=((cmd&0x80000000)>>19);
+            /*save the 12 bit of offset and the signed bits*/
+            int32_t offset =(((int32_t)cmd>>19)&0x1000);
+            /*offset 4:1*/
+            offset |=(((cmd>>8)&0xf)<<1);
+            /*offset 10:5*/
+            offset |=(((cmd>>25)&0x1f)<<5);
             /*if offset> 0,tranverse below*/
             if(offset>0){
                 int32_t j=0;
-                for(j=0;j<(offset/4);j++){
+                /*keep the condition unchanged*/
+                int32_t temp = offset;
+                for(j=0;j<(temp/4);j++){
                     /*if compressible, offset minus 2*/
                     if(cmd_info[i+j].state == COMPRESSIBLE)
                         offset-=2;
@@ -698,29 +726,50 @@ void handle_unsure(cmd_info_t * cmd_info){
             /*if offset> 0,tranverse above*/
             else if (offset<0){
                 int32_t j=0;
-                for(j=-1;-j<-(offset/4);j--){
+                /*keep the condition unchanged*/
+                int32_t temp = offset;
+                for(j=-1;-j<-(temp/4);j--){
                     /*if compressible, offset plus 2*/
                     if(cmd_info[i+j].state == COMPRESSIBLE)
                         offset+=2;
                 }
             }
-            /*get new cmd*/
-            n_cmd |=((offset&0x20)>>3);
-            n_cmd |=((offset&0x6)<<2);
-            n_cmd |=((offset&0xc0)>>1);
-            /*get new cmd*/
-            n_cmd |=(rd<<7);
-            n_cmd |=((offset&0x18)<<7);
-            n_cmd |=((offset&0x100)<<4);
-            /*c.beqz*/
-            if(!funct3)
-                n_cmd |=0xc000;
-            /*c.bnez*/
-            else
-                n_cmd |=0xe000;
+            if(cmd_info[i].state == COMPRESSIBLE){
+                /*get new cmd*/
+                n_cmd |=((offset&0x20)>>3);
+                n_cmd |=((offset&0x6)<<2);
+                n_cmd |=((offset&0xc0)>>1);
+                /*get new cmd*/
+                n_cmd |=(rd<<7);
+                n_cmd |=((offset&0x18)<<7);
+                n_cmd |=((offset&0x100)<<4);
+                /*c.beqz*/
+                if(!funct3)
+                    n_cmd |=0xc000;
+                /*c.bnez*/
+                else
+                    n_cmd |=0xe000;
             /*if compressible, set the new cmd*/
-            if(cmd_info[i].state==COMPRESSIBLE)
                 cmd_info[i].cmd = n_cmd;
+            }
+            else{
+                uint32_t n_imm5=0;
+                uint32_t n_imm7=0;
+                /*clear origin imm*/
+                cmd_info[i].cmd&=(~0xf80);
+                cmd_info[i].cmd&=(~0xfe000000);
+                /*offset 11*/
+                n_imm5|=((offset>>11)&0x1);
+                /*offset 4:1*/
+                n_imm5|=(((offset>>1)&0x8)<<1);
+                /*offset 10:5*/
+                n_imm7|=((offset>>5)&0x3f);
+                /*offset 12*/
+                n_imm7|=(((offset>>12)&0x1)<<6);
+                /*get new cmd*/
+                cmd_info[i].cmd|=(n_imm5<<7);
+                cmd_info[i].cmd|=(n_imm7<<25);
+            }
         }
     }
 }
