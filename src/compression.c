@@ -525,7 +525,7 @@ void UJ_check(cmd_info_t * cmd_info){
 
 void handle_compressible(cmd_info_t * cmd_info){
     uint32_t i=0;
-    for(i=0;i>cmd_num;i++){
+    for(i=0;i<cmd_num;i++){
         if(cmd_info[i].state != COMPRESSIBLE)
             continue;
         switch(cmd_info[i].c_format){
@@ -533,12 +533,16 @@ void handle_compressible(cmd_info_t * cmd_info){
                 CR_compress(&cmd_info[i]);
                 break;
             case CI:
+                CI_compress(&cmd_info[i]);
                 break;
             case CL:
+                CL_compress(&cmd_info[i]);
                 break;
             case CS_T1: case CS_T2:
+                CS_compress(&cmd_info[i]);
                 break;
             case CB_T2:
+                CB_T2_Compress(&cmd_info[i]);
                 break;
             default:
                 continue;
@@ -549,7 +553,7 @@ void handle_compressible(cmd_info_t * cmd_info){
 void handle_unsure(cmd_info_t * cmd_info){
     uint32_t i=0;
     uint32_t n_cmd = 0x1;
-    for(i=0;i>cmd_num;i++){
+    for(i=0;i<cmd_num;i++){
         uint32_t cmd = cmd_info[i].cmd;
         /*c.j and c.jar*/
         if(cmd_info[i].c_format == CJ){
@@ -585,18 +589,16 @@ void handle_unsure(cmd_info_t * cmd_info){
             n_cmd|=((offset&0x10)<<6);
             n_cmd|=((offset&0x800)<<1);
             /*c.jal*/
-            if(rd){
+            if(rd)
                 n_cmd|=0x2000;
-            }
             /*c.j*/
-            else{
+            else
                 n_cmd|=0xa000;
-            }
             cmd_info[i].cmd = n_cmd;
         }
         /*c.beqz and c.bnez*/
         else if(cmd_info[i].c_format == CB_T1){
-            uint32_t rd = (cmd>>15)&REGISTER-8;
+            uint32_t rd = ((cmd>>15)&REGISTER)-8;
             int32_t offset =0;
             uint32_t funct3=(cmd>>12)&FUNCT3;
             offset |=((cmd&0x80)<<4);
@@ -626,8 +628,10 @@ void handle_unsure(cmd_info_t * cmd_info){
             /*c.beqz*/
             if(!funct3)
                 n_cmd |=0xc000;
+            /*c.bnez*/
             else
                 n_cmd |=0xe000;
+            cmd_info[i].cmd = n_cmd;
         }
     }
 }
@@ -695,7 +699,9 @@ cmd_info_t * compress(uint32_t * cmd_data){
     format_compressible_check(cmd_info,cmd_data);
     /*unuse the cmd_data*/
     free(cmd_data);
-    return NULL;
+    handle_compressible(cmd_info);
+    handle_unsure(cmd_info);
+    return cmd_info;
 }
 
 /* Your code here... */
