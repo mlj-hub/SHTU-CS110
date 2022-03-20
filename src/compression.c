@@ -108,7 +108,6 @@ void CS_compress(cmd_info_t * cmd_info)
         CS_T1_IMM2 += ((Old_imm12 >> 2) & 0x1) <<1 ;
         CS_T1_IMM2 += (Old_imm12 >> 6) & 0x1;
         /* change the cmd*/
-        printf("%x\n",cmd_info->c_format);
         cmd_info->cmd = (CS_T1_OP) + (CS_T1_RS2 << 2) + (CS_T1_IMM2 << 5) + \
                         (CS_T1_RS1<<7) + (CS_T1_IMM3 << 10) + (CS_T1_funct3<< 13);
         return;
@@ -557,7 +556,7 @@ void U_check(cmd_info_t * cmd_info){
     uint32_t rd = (cmd >>7)&REGISTER;
     /*get imm20*/
     int32_t imm20 = (cmd>>12)&IMM20;
-    if(rd !=0 && rd!=2 && !imm20 && imm20<=31 && imm20>=-32){
+    if(rd !=0 && rd!=2 && imm20 && imm20<=31 && imm20>=-32){
         /*set c_format*/
         cmd_info->c_format = CI;
         /*compressible*/
@@ -631,14 +630,14 @@ void get_uj_offset(uint32_t imm20,int32_t * offset){
 void handle_unsure(cmd_info_t * cmd_info){
     /*initialize*/
     uint32_t i=0;
-    uint32_t n_cmd = 0x1;
     /*tranverse the cmd*/
     for(i=0;i<cmd_num;i++){
+        uint32_t n_cmd = 0x1;
         uint32_t cmd = cmd_info[i].cmd;
         /*if incompressible, continue*/
         if(cmd_info[i].state==INCOMPRESSIBLE)
             continue;
-        /*c.j and c.jar*/
+        /*c.j and c.jal*/
         if(cmd_info[i].format == UJ){
             /*get rd and imm20*/
             uint32_t rd = (cmd>>7)&REGISTER;
@@ -678,8 +677,8 @@ void handle_unsure(cmd_info_t * cmd_info){
                 n_cmd|=((offset&0x400)>>2);/*offset 10*/
                 n_cmd|=((offset&0x300)<<1);/*offset 9:8*/
                 /*get new cmd*/
-                n_cmd|=((offset&0x10)<<6);/*offset 4*/
-                n_cmd|=(offset&0x800); /*offset 11*/
+                n_cmd|=((offset&0x10)<<7);/*offset 4*/
+                n_cmd|=((offset&0x800)<<1); /*offset 11*/
                 /*c.jal*/
                 if(rd)
                     n_cmd|=0x2000;
@@ -720,7 +719,6 @@ void handle_unsure(cmd_info_t * cmd_info){
             offset |=(((cmd>>25)&0x3f)<<5);
             /*offset 11*/
             offset |=(((cmd>>7)&0x1)<<11);
-            printf("%d\n",offset);
             /*if offset> 0,tranverse below*/
             if(offset>0){
                 int32_t j=0;
