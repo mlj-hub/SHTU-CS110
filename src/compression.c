@@ -202,10 +202,10 @@ void CI_compress(cmd_info_t *cmd_info)
         int32_t Old_imm20 = (cmd_info->cmd>>12)&IMM20;
         /*get parameters according to the green card*/
         CI_funct3 = 3;
-        CI_IMM1 = (Old_imm20 >> 17) & 0x1;
+        CI_IMM1 = (Old_imm20 >> 5) & 0x1;
         /*set parameters according to the format*/
         CI_RS1orRD = Old_rd;
-        CI_IMM5 = (Old_imm20 >> 12) & IMM5;
+        CI_IMM5 = Old_imm20& IMM5;
         CI_OP = 1;
     }
     /* the old type is I,the input is addi or slli*/
@@ -555,8 +555,17 @@ void U_check(cmd_info_t * cmd_info){
     uint32_t cmd = cmd_info -> cmd;
     uint32_t rd = (cmd >>7)&REGISTER;
     /*get imm20*/
-    int32_t imm20 = (cmd>>12)&IMM20;
-    if(rd !=0 && rd!=2 && imm20 && imm20<=31 && imm20>=-32){
+    int32_t imm20 = cmd&0xfffff000;
+    /*highest bits are all one and 17 bit is 1*/
+    if((imm20&0xfffc0000) == 0xfffc0000 && (imm20&0x00020000)!=0 && rd!=0 && rd!=2 && imm20){
+        /*set c_format*/
+        cmd_info->c_format = CI;
+        /*compressible*/
+        cmd_info->state = COMPRESSIBLE;
+        return;
+    }
+    /*highest bits are all 0 and 17 bit is 0*/
+    else if((imm20&0xfffc0000) == 0 && (imm20&0x00020000)==0 && rd!=0 && rd!=2 && imm20){
         /*set c_format*/
         cmd_info->c_format = CI;
         /*compressible*/
