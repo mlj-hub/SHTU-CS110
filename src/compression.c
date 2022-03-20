@@ -639,7 +639,7 @@ void handle_unsure(cmd_info_t * cmd_info){
         if(cmd_info[i].state==INCOMPRESSIBLE)
             continue;
         /*c.j and c.jar*/
-        if(cmd_info[i].c_format == CJ){
+        if(cmd_info[i].format == UJ){
             /*get rd and imm20*/
             uint32_t rd = (cmd>>7)&REGISTER;
             uint32_t imm20 = ((int32_t)cmd>>12)&SIGN_ALL;
@@ -661,7 +661,7 @@ void handle_unsure(cmd_info_t * cmd_info){
             else if (offset<0){
                 int32_t j=0;
                 int32_t temp = offset;
-                for(j=-1;-j<-(temp/4);j--){
+                for(j=-1;-j<=-(temp/4);j--){
                     /*if compressible, offset plus 2*/
                     if(cmd_info[i+j].state == COMPRESSIBLE)
                         offset+=2;
@@ -707,17 +707,20 @@ void handle_unsure(cmd_info_t * cmd_info){
             }
         }
         /*c.beqz and c.bnez*/
-        else if(cmd_info[i].c_format == CB_T1){
+        else if(cmd_info[i].format == SB){
             /*set rd to the required one*/
             uint32_t rd = ((cmd>>15)&REGISTER)-8;
             /*set funct3*/
             uint32_t funct3=(cmd>>12)&FUNCT3;
             /*save the 12 bit of offset and the signed bits*/
-            int32_t offset =(((int32_t)cmd>>19)&0x1000);
+            int32_t offset =(((int32_t)cmd>>19)&0xfffff000);
             /*offset 4:1*/
             offset |=(((cmd>>8)&0xf)<<1);
             /*offset 10:5*/
-            offset |=(((cmd>>25)&0x1f)<<5);
+            offset |=(((cmd>>25)&0x3f)<<5);
+            /*offset 11*/
+            offset |=(((cmd>>7)&0x1)<<11);
+            printf("%d\n",offset);
             /*if offset> 0,tranverse below*/
             if(offset>0){
                 int32_t j=0;
@@ -734,7 +737,7 @@ void handle_unsure(cmd_info_t * cmd_info){
                 int32_t j=0;
                 /*keep the condition unchanged*/
                 int32_t temp = offset;
-                for(j=-1;-j<-(temp/4);j--){
+                for(j=-1;-j<=-(temp/4);j--){
                     /*if compressible, offset plus 2*/
                     if(cmd_info[i+j].state == COMPRESSIBLE)
                         offset+=2;
@@ -767,7 +770,7 @@ void handle_unsure(cmd_info_t * cmd_info){
                 /*offset 11*/
                 n_imm5|=((offset>>11)&0x1);
                 /*offset 4:1*/
-                n_imm5|=(((offset>>1)&0x8)<<1);
+                n_imm5|=(((offset>>1)&0xf)<<1);
                 /*offset 10:5*/
                 n_imm7|=((offset>>5)&0x3f);
                 /*offset 12*/
