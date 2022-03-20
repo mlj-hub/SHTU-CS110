@@ -219,7 +219,8 @@ void CI_compress(cmd_info_t *cmd_info)
         {
             /* the old cmd is slli*/
             CI_funct3 = 0;
-            CI_IMM1 = (Old_imm12>>5) & 0x1;
+            /*shamt[5] should be zero, we directly assigned 0 to imm1*/
+            CI_IMM1 = 0;
             CI_RS1orRD = Old_rd;
             CI_IMM5 =  Old_imm12 & IMM5;
             CI_OP = 2;
@@ -232,7 +233,59 @@ void CI_compress(cmd_info_t *cmd_info)
     return;
 
 }
+void CB_T2_Compress(cmd_info_t *cmd_info)
+{
+        /*CI parameters*/
+    uint32_t CB_T2_funct3 = 0x4;
+    uint32_t CB_T2_IMM1 = 0;
+    uint32_t CB_T2_funct2 = 0;
+    uint32_t CB_T2_RS1orRD = 0 ;
+    uint32_t CB_T2_IMM5 = 0;
+    uint32_t CB_T2_OP = 1;
+    /* given parameters,type I*/
+    uint32_t Old_rd = (cmd_info->cmd>>7)&REGISTER;
+    uint32_t Old_funct3 = (cmd_info->cmd>>12)&FUNCT3;
+    uint32_t Old_imm12 = (cmd_info->cmd>>20)&IMM12;
+    uint32_t Old_shamt = (cmd_info->cmd>>20)&REGISTER;
+    uint32_t Old_funct7 = (cmd_info->cmd>>25)&FUNCT7;
+    if (Old_funct3 == 0x5)
+    {
+        if (Old_funct7 == 0)
+        {
+            /* shamt 5 should be 0*/
+            CB_T2_IMM1 = 0;
+            CB_T2_funct2 = 0;
+            /*change the value of Rd*/
+            CB_T2_RS1orRD = Old_rd-8 ;
+            CB_T2_IMM5 = Old_shamt;
+            /* the RISCV 16 cmd is [c.srli]*/
+        }
+        else
+        {
+            /* shamt 5 should be 0*/
+            CB_T2_IMM1 = 0;
+            CB_T2_funct2 = 1;
+            /*change the value of Rd*/
+            CB_T2_RS1orRD = Old_rd-8 ;
+            CB_T2_IMM5 = Old_shamt;
+            /* the RISCV 16 cmd is [c.srai]*/
+        }
+    }
+    else
+    {   
+            /* shamt 5 should be 0*/
+            CB_T2_IMM1 = (Old_imm12>>5) & 0x1;
+            CB_T2_funct2 = 2;
+            /*change the value of Rd*/
+            CB_T2_RS1orRD = Old_rd-8 ;
+            CB_T2_IMM5 = Old_imm12 & IMM5;
+        /*the RISCV16 cmd is [c.andi]*/
+    }
+    cmd_info->cmd = CB_T2_OP + (CB_T2_IMM5<<2) + (CB_T2_RS1orRD << 7) +\
+                    +(CB_T2_funct2<< 10) + (CB_T2_IMM1<<12)+(CB_T2_funct3 << 13);
 
+    return;
+}
 
 void R_check(cmd_info_t * cmd_info){
     uint32_t cmd = cmd_info->cmd;
