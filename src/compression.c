@@ -64,6 +64,7 @@ void CR_compress(cmd_info_t * cmd_info){
     return;
 
 }
+
 void CS_compress(cmd_info_t * cmd_info)
 {
     /*if the RISCV32 command is S,then in CS_compress the command is [sw] */
@@ -149,6 +150,143 @@ void CS_compress(cmd_info_t * cmd_info)
 
 }
 /*check add,and,or,xor,sub*/
+void CL_compress(cmd_info_t *cmd_info)
+{
+    /* the parameter of I*/
+    uint32_t Old_rd = (cmd_info->cmd>>7)&REGISTER;
+    uint32_t Old_rs1 = (cmd_info->cmd>>15)&REGISTER;
+    int32_t  Old_imm12 = (cmd_info->cmd>>20)&IMM12;
+    /* the parameter of CL*/
+    uint32_t CL_funct3 = 2;
+    uint32_t CL_IMM3 = (Old_imm12>>3) & 0x7;
+    uint32_t CL_RS1 = Old_rs1 - 8;
+    uint32_t CL_IMM2 = 0;
+    uint32_t CL_RD= Old_rd - 8;
+    uint32_t CL_OP = 0;
+    CL_IMM2 += ((Old_imm12 >> 2) & 0x1) <<1 ;
+    CL_IMM2 += (Old_imm12 >> 6) & 0x1;
+    cmd_info->cmd = CL_OP + (CL_RD << 2) + (CL_IMM2<<5) +\
+                    (CL_RS1 << 7) + (CL_IMM3 << 10) + (CL_funct3 << 13);
+    return ;
+}
+
+void CI_compress(cmd_info_t *cmd_info)
+{
+    /*CI parameters*/
+    uint32_t CI_funct3 = 0;
+    uint32_t CI_IMM1 = 0;
+    uint32_t CI_RS1orRD = 0 ;
+    uint32_t CI_IMM5 = 0;
+    uint32_t CI_OP = 0;
+    /*the input command is lui,the old type is U*/
+    if(cmd_info->format == U)
+    {
+        /*change the value of CI ,the commmand is [c.LUI]*/
+        uint32_t Old_rd = (cmd_info->cmd>>7)&REGISTER;
+        int32_t Old_imm20 = (cmd_info->cmd>>12)&IMM20;
+        CI_funct3 = 3;
+        CI_IMM1 = (Old_imm20 >> 17) & 0x1;
+        CI_RS1orRD = Old_rd;
+        CI_IMM5 = (Old_imm20 >> 12) & IMM5;
+        CI_OP = 1;
+    }
+    /* the old type is I,the input is addi or slli*/
+    else if (cmd_info->format == I)
+    {
+        uint32_t Old_rd = (cmd_info->cmd>>7)&REGISTER;
+        uint32_t Old_rs1 = (cmd_info->cmd>>15)&REGISTER;
+        uint32_t Old_funct3 = (cmd_info->cmd>>12)&FUNCT3;
+        int32_t  Old_imm12 = (cmd_info->cmd>>20)&IMM12;
+        if (Old_funct3 == 0)
+        {
+            /* the old cmd is addi */
+            CI_IMM1 = (Old_imm12>>5) & 0x1;
+            CI_RS1orRD = Old_rd;
+            CI_IMM5 =  Old_imm12 & IMM5;
+            CI_OP = 1;
+            if (Old_rs1 == 0)
+            {
+                /* the commmand is [c.li]*/
+                CI_funct3 = 2;
+            }
+            else
+            {
+                /* the command is [c.slli]*/
+                CI_funct3 = 0;
+            }
+        }
+        else
+        {
+            /* the old cmd is slli*/
+            CI_funct3 = 0;
+            /*shamt[5] should be zero, we directly assigned 0 to imm1*/
+            CI_IMM1 = 0;
+            CI_RS1orRD = Old_rd;
+            CI_IMM5 =  Old_imm12 & IMM5;
+            CI_OP = 2;
+
+        }
+    }
+    /*changt the value of the command*/
+    cmd_info->cmd = CI_OP + (CI_IMM5 <<2) + (CI_RS1orRD << 7) +\
+                    (CI_IMM1<<12) + (CI_funct3 << 13);
+    return;
+
+}
+void CB_T2_Compress(cmd_info_t *cmd_info)
+{
+        /*CI parameters*/
+    uint32_t CB_T2_funct3 = 0x4;
+    uint32_t CB_T2_IMM1 = 0;
+    uint32_t CB_T2_funct2 = 0;
+    uint32_t CB_T2_RS1orRD = 0 ;
+    uint32_t CB_T2_IMM5 = 0;
+    uint32_t CB_T2_OP = 1;
+    /* given parameters,type I*/
+    uint32_t Old_rd = (cmd_info->cmd>>7)&REGISTER;
+    uint32_t Old_funct3 = (cmd_info->cmd>>12)&FUNCT3;
+    uint32_t Old_imm12 = (cmd_info->cmd>>20)&IMM12;
+    uint32_t Old_shamt = (cmd_info->cmd>>20)&REGISTER;
+    uint32_t Old_funct7 = (cmd_info->cmd>>25)&FUNCT7;
+    if (Old_funct3 == 0x5)
+    {
+        if (Old_funct7 == 0)
+        {
+            /* shamt 5 should be 0*/
+            CB_T2_IMM1 = 0;
+            CB_T2_funct2 = 0;
+            /*change the value of Rd*/
+            CB_T2_RS1orRD = Old_rd-8 ;
+            CB_T2_IMM5 = Old_shamt;
+            /* the RISCV 16 cmd is [c.srli]*/
+        }
+        else
+        {
+            /* shamt 5 should be 0*/
+            CB_T2_IMM1 = 0;
+            CB_T2_funct2 = 1;
+            /*change the value of Rd*/
+            CB_T2_RS1orRD = Old_rd-8 ;
+            CB_T2_IMM5 = Old_shamt;
+            /* the RISCV 16 cmd is [c.srai]*/
+        }
+    }
+    else
+    {   
+            /* shamt 5 should be 0*/
+            CB_T2_IMM1 = (Old_imm12>>5) & 0x1;
+            CB_T2_funct2 = 2;
+            /*change the value of Rd*/
+            CB_T2_RS1orRD = Old_rd-8 ;
+            CB_T2_IMM5 = Old_imm12 & IMM5;
+        /*the RISCV16 cmd is [c.andi]*/
+    }
+    cmd_info->cmd = CB_T2_OP + (CB_T2_IMM5<<2) + (CB_T2_RS1orRD << 7) +\
+                    +(CB_T2_funct2<< 10) + (CB_T2_IMM1<<12)+(CB_T2_funct3 << 13);
+
+    return;
+}
+
 void R_check(cmd_info_t * cmd_info){
     uint32_t cmd = cmd_info->cmd;
     /*get parameters according to the format*/
