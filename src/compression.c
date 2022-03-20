@@ -272,10 +272,14 @@ void LI_check(cmd_info_t * cmd_info){
     /*check whether rd is between x8-x15*/
     else if(rd>=16 || rd<=7)
         cmd_info->state = INCOMPRESSIBLE;
-    /*incompressible if offset is negative or the least two significant bits is non-zero */
-    else if(imm12 < 0 || (imm12>>10))
+    /*incompressible if offset is negative  */
+    else if(imm12 < 0)
         cmd_info->state = INCOMPRESSIBLE;
+    /*incompressible if the least two significant bits is non-zero*/
     else if(imm12 % 4!=0)
+        cmd_info->state = INCOMPRESSIBLE;
+    /*incompressible if imm is larger than 64*/
+    else if ((imm12>>2)>=64)
         cmd_info->state = INCOMPRESSIBLE;
     /*otherwise compressible*/
     else{
@@ -304,10 +308,14 @@ void S_check(cmd_info_t * cmd_info){
     /*check whether rs2 is between x8-x15*/
     else if(rs2>=16 || rs2<=7)
         cmd_info->state = INCOMPRESSIBLE;
-    /*incompressible if offset is negative or the least two significant bits is non-zero */
-    else if(imm12 < 0 || (imm12>>10))
+    /*incompressible if offset is negative*/
+    else if(imm12 < 0)
         cmd_info->state = INCOMPRESSIBLE;
+    /*incompressible if the least two significant bits is non-zero*/
     else if(imm12 % 4!=0)
+        cmd_info->state = INCOMPRESSIBLE;
+    /*incompressible if imm is larger than 64*/
+    else if ((imm12>>2)>=64)
         cmd_info->state = INCOMPRESSIBLE;
     /*otherwise compressible*/
     else{
