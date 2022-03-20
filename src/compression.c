@@ -167,7 +167,7 @@ void CL_compress(cmd_info_t *cmd_info)
     CL_IMM2 += (Old_imm12 >> 6) & 0x1;
     cmd_info->cmd = CL_OP + (CL_RD << 2) + (CL_IMM2<<5) +\
                     (CL_RS1 << 7) + (CL_IMM3 << 10) + (CL_funct3 << 13);
-
+    return ;
 }
 void R_check(cmd_info_t * cmd_info){
     uint32_t cmd = cmd_info->cmd;
