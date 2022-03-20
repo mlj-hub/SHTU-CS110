@@ -25,14 +25,17 @@ void CR_compress(cmd_info_t * cmd_info){
             /*the cmd is [c.add]*/
             CR_funct4 = 0x9;
             CR_rdORrs1 = Old_rd;
+            /*set rs2*/
             CR_rs2 = Old_rs2;
             CR_op = 0x2;
         }
         /*c.mv*/
         else
         {
+            /*get parameters*/
             CR_funct4 = 0x8;
             CR_rdORrs1 = Old_rd;
+            /*set rs2*/
             CR_rs2 = Old_rs2;
             CR_op = 0x2;
             /* the cmd is [c.mv]*/
@@ -49,6 +52,7 @@ void CR_compress(cmd_info_t * cmd_info){
             /* the cmd is [c.jr] */
             CR_funct4 = 0x8;
             CR_rdORrs1 = Old_rs1;
+            /*set rs2*/
             CR_rs2 = 0;
             CR_op = 0x2;
         }
@@ -57,6 +61,7 @@ void CR_compress(cmd_info_t * cmd_info){
             /*get parameters*/
             CR_funct4 = 0x9;
             CR_rdORrs1 = Old_rs1;
+            /*set rs2*/
             CR_rs2 = 0;
             CR_op = 0x2;
             /* the cmd is [c.jalr] */
@@ -77,6 +82,7 @@ void CS_compress(cmd_info_t * cmd_info)
         uint32_t CS_T1_funct3 = 0;
         uint32_t CS_T1_IMM3 = 0;
         uint32_t CS_T1_RS1 = 0;
+        /*get imm2*/
         uint32_t CS_T1_IMM2 = 0;
         uint32_t CS_T1_RS2 = 0;
         uint32_t CS_T1_OP = 0;
@@ -109,6 +115,7 @@ void CS_compress(cmd_info_t * cmd_info)
         uint32_t Old_funct3 = (cmd_info->cmd>>12)&FUNCT3;
         uint32_t Old_rs1 = (cmd_info->cmd>>15)&REGISTER;
         uint32_t Old_rs2 = (cmd_info->cmd>>20)&REGISTER;
+        /*get funct7*/
         uint32_t Old_funct7 = (cmd_info->cmd>>25)&FUNCT7;
         /*get parameters from the green card*/
         uint32_t CS_T2_funct6 = 0x23;
@@ -117,7 +124,7 @@ void CS_compress(cmd_info_t * cmd_info)
         /*set registers to the required ones*/
         uint32_t CS_T2_RS2 = Old_rs2 - 8;
         uint32_t CS_T2_OP = 1;
-
+        /*c.add or c.or or c.xor*/
         if (Old_funct7 == 0)
         {
             /* the RISCV16 cmmmand is [c.and] [c.or] [c.xor]*/
@@ -146,7 +153,6 @@ void CS_compress(cmd_info_t * cmd_info)
         cmd_info->cmd = CS_T2_OP + (CS_T2_RS2<<2) + \
             (CS_T2_funct2<<5) + (CS_T2_RDorRS1<<7) + \
             (CS_T2_funct6<<10);
-        return;
     }
 
 
@@ -165,13 +171,13 @@ void CL_compress(cmd_info_t *cmd_info)
     /*set registers to the requided ones*/
     uint32_t CL_RS1 = Old_rs1 - 8;
     uint32_t CL_IMM2 = 0;
+    /*set registers to the requided ones*/
     uint32_t CL_RD= Old_rd - 8;
     uint32_t CL_OP = 0;
     /*get imm according to the green card*/
     CL_IMM2 += ((Old_imm12 >> 2) & 0x1) <<1 ;
     CL_IMM2 += (Old_imm12 >> 6) & 0x1;
     cmd_info->cmd = CL_OP + (CL_RD << 2) + (CL_IMM2<<5) +(CL_RS1 << 7) + (CL_IMM3 << 10) + (CL_funct3 << 13);
-    return ;
 }
 
 void CI_compress(cmd_info_t *cmd_info)
@@ -180,6 +186,7 @@ void CI_compress(cmd_info_t *cmd_info)
     uint32_t CI_funct3 = 0;
     uint32_t CI_IMM1 = 0;
     uint32_t CI_RS1orRD = 0 ;
+    /*set imm5*/
     uint32_t CI_IMM5 = 0;
     uint32_t CI_OP = 0;
     /*the input command is lui,the old type is U*/
@@ -202,6 +209,7 @@ void CI_compress(cmd_info_t *cmd_info)
         /*get parameters according to the format*/
         uint32_t Old_rd = (cmd_info->cmd>>7)&REGISTER;
         uint32_t Old_rs1 = (cmd_info->cmd>>15)&REGISTER;
+        /*set funct3*/
         uint32_t Old_funct3 = (cmd_info->cmd>>12)&FUNCT3;
         int32_t  Old_imm12 = (cmd_info->cmd>>20)&IMM12;
         /*addi*/
@@ -210,6 +218,7 @@ void CI_compress(cmd_info_t *cmd_info)
             /* the old cmd is addi */
             CI_IMM1 = (Old_imm12>>5) & 0x1;
             CI_RS1orRD = Old_rd;
+            /*get imm5*/
             CI_IMM5 =  Old_imm12 & IMM5;
             CI_OP = 1;
             /*c.li*/
@@ -291,10 +300,8 @@ void CB_T2_Compress(cmd_info_t *cmd_info)
         /*the RISCV16 cmd is [c.andi]*/
     }
     cmd_info->cmd = CB_T2_OP + (CB_T2_IMM5<<2) + (CB_T2_RS1orRD << 7) +(CB_T2_funct2<< 10) + (CB_T2_IMM1<<12)+(CB_T2_funct3 << 13);
-
-    return;
 }
-
+/*R_Check*/
 void R_check(cmd_info_t * cmd_info){
     uint32_t cmd = cmd_info->cmd;
     /*get parameters according to the format*/
@@ -324,6 +331,7 @@ void R_check(cmd_info_t * cmd_info){
                     /*conditions if compressible*/
                     cmd_info->state = COMPRESSIBLE;
                     cmd_info->c_format = CS_T2;
+                    /*return*/
                     return;
                 }
             }
@@ -338,6 +346,7 @@ void R_check(cmd_info_t * cmd_info){
             if(rd==rs1 && rd<=15 && rd>=8){
                 cmd_info -> state = COMPRESSIBLE;
                 cmd_info -> c_format = CS_T2;
+                /*return */
                 return ;
             }
             /*otherwise, incompressible*/
