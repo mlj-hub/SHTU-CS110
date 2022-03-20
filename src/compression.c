@@ -87,9 +87,9 @@ void CS_compress(cmd_info_t * cmd_info)
         uint32_t CS_T1_RS2 = 0;
         uint32_t CS_T1_OP = 0;
         /*parameters of the RISCV-32 Command CS_T2*/
-        int32_t Old_imm12 = 0;
-        int32_t Old_imm5 = 0;
-        int32_t Old_imm7 = 0;
+        uint32_t Old_imm12 = 0;
+        uint32_t Old_imm5 = 0;
+        uint32_t Old_imm7 = 0;
         /*get the parameters of old cmd */
         uint32_t Old_rs1 = (cmd_info->cmd>>15)&REGISTER;
         uint32_t Old_rs2 = (cmd_info->cmd>>20)&REGISTER;
@@ -108,6 +108,7 @@ void CS_compress(cmd_info_t * cmd_info)
         CS_T1_IMM2 += ((Old_imm12 >> 2) & 0x1) <<1 ;
         CS_T1_IMM2 += (Old_imm12 >> 6) & 0x1;
         /* change the cmd*/
+        printf("%x\n",cmd_info->c_format);
         cmd_info->cmd = (CS_T1_OP) + (CS_T1_RS2 << 2) + (CS_T1_IMM2 << 5) + \
                         (CS_T1_RS1<<7) + (CS_T1_IMM3 << 10) + (CS_T1_funct3<< 13);
         return;
@@ -495,7 +496,7 @@ void S_check(cmd_info_t * cmd_info){
     else if(imm12 % 4!=0)
         cmd_info->state = INCOMPRESSIBLE;
     /*incompressible if imm is larger than 64*/
-    else if ((imm12>>2)>=64)
+    else if ((imm12>>2)>=32)
         cmd_info->state = INCOMPRESSIBLE;
     /*otherwise compressible*/
     else{
