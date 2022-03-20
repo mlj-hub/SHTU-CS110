@@ -386,11 +386,112 @@ void UJ_check(cmd_info_t * cmd_info){
 }
 
 void handle_compressible(cmd_info_t * cmd_info){
-    (void) cmd_info;
+    uint32_t i=0;
+    for(i=0;i>cmd_num;i++){
+        if(cmd_info[i].state != COMPRESSIBLE)
+            continue;
+        switch(cmd_info[i].c_format){
+            case CR:
+                CR_compress(&cmd_info[i]);
+                break;
+            case CI:
+                break;
+            case CL:
+                break;
+            case CS_T1: case CS_T2:
+                break;
+            case CB_T2:
+                break;
+            default:
+                continue;
+        }
+    }
 }
 
 void handle_unsure(cmd_info_t * cmd_info){
-    (void) cmd_info;
+    uint32_t i=0;
+    uint32_t n_cmd = 0x1;
+    for(i=0;i>cmd_num;i++){
+        uint32_t cmd = cmd_info[i].cmd;
+        /*c.j and c.jar*/
+        if(cmd_info[i].c_format == CJ){
+            uint32_t rd = (cmd>>7)&REGISTER;
+            uint32_t imm20 = (cmd>>12)&IMM20;
+            int32_t offset = 0;
+            /*get offset according to the green card*/
+            offset |=((imm20&0xff)<<12);
+            offset |=((imm20&0x100)<<3);
+            offset |=((imm20&0x7fe00)>>9);
+            offset |=(imm20&0x80000);
+            if(offset>0){
+                int32_t j=0;
+                for(j=0;j<(offset/4);j++){
+                    if(cmd_info[i+j].state == COMPRESSIBLE)
+                        offset-=2;
+                }
+            }
+            else if (offset<0){
+                int32_t j=0;
+                for(j=-1;-j<-(offset/4);j--){
+                    if(cmd_info[i+j].state == COMPRESSIBLE)
+                        offset+=2;
+                }
+            }
+            /*get the new cmd*/
+            n_cmd|=((offset&0x20)>>3);
+            n_cmd|=((offset&0xe)<<2);
+            n_cmd|=((offset&0x80)>>1);
+            n_cmd|=((offset&0x40)<<1);
+            n_cmd|=((offset&0x400)>>2);
+            n_cmd|=((offset&0x300)<<1);
+            n_cmd|=((offset&0x10)<<6);
+            n_cmd|=((offset&0x800)<<1);
+            /*c.jal*/
+            if(rd){
+                n_cmd|=0x2000;
+            }
+            /*c.j*/
+            else{
+                n_cmd|=0xa000;
+            }
+            cmd_info[i].cmd = n_cmd;
+        }
+        /*c.beqz and c.bnez*/
+        else if(cmd_info[i].c_format == CB_T1){
+            uint32_t rd = (cmd>>15)&REGISTER-8;
+            int32_t offset =0;
+            uint32_t funct3=(cmd>>12)&FUNCT3;
+            offset |=((cmd&0x80)<<4);
+            offset |=((cmd&0xf00)>>7);
+            offset |=((cmd&0x7e000000)>>20);
+            offset |=((cmd&0x80000000)>>19);
+            if(offset>0){
+                int32_t j=0;
+                for(j=0;j<(offset/4);j++){
+                    if(cmd_info[i+j].state == COMPRESSIBLE)
+                        offset-=2;
+                }
+            }
+            else if (offset<0){
+                int32_t j=0;
+                for(j=-1;-j<-(offset/4);j--){
+                    if(cmd_info[i+j].state == COMPRESSIBLE)
+                        offset+=2;
+                }
+            }
+            n_cmd |=((offset&0x20)>>3);
+            n_cmd |=((offset&0x6)<<2);
+            n_cmd |=((offset&0xc0)>>1);
+            n_cmd |=(rd<<7);
+            n_cmd |=((offset&0x18)<<7);
+            n_cmd |=((offset&0x100)<<4);
+            /*c.beqz*/
+            if(!funct3)
+                n_cmd |=0xc000;
+            else
+                n_cmd |=0xe000;
+        }
+    }
 }
 
 void format_compressible_check(cmd_info_t * cmd_info,uint32_t * cmd_data){
