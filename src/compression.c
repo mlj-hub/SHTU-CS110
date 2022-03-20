@@ -352,8 +352,7 @@ void I_check(cmd_info_t * cmd_info){
                 return;
             }
             /*c.addi rd=rs1!=0, imm!=0*/
-            else if(rd==rs1 && !rd && !imm12 && imm12<=31 && imm12>=-32){
-                printf("c.addi");
+            else if(rd==rs1 && rd && imm12 && imm12<=31 && imm12>=-32){
                 cmd_info->state = COMPRESSIBLE;
                 cmd_info->c_format = CI;
                 return;
