@@ -47,6 +47,7 @@ typedef struct{
 #define IMM12 0xfff
 #define IMM7  0x7f
 #define IMM5  0x1f
+#define SIGN_ALL 0xffffffff
 
 cmd_info_t * compress(uint32_t *);
 #endif

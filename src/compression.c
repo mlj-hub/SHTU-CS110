@@ -321,8 +321,8 @@ void R_check(cmd_info_t * cmd_info){
             break;
         /*xor,and,or share the same condition when compressible*/
         case 0x4:
-        case 0x5:
         case 0x6:
+        case 0x7:
             /*compressible only when rd is same with rs1*/
             if(rd==rs1 && rd<=15 && rd>=8){
                 cmd_info -> state = COMPRESSIBLE;
@@ -341,7 +341,7 @@ void I_check(cmd_info_t * cmd_info){
     uint32_t rd = (cmd>>7)&REGISTER;
     uint32_t rs1 = (cmd>>15)&REGISTER;
     uint32_t funct3 = (cmd>>12)&FUNCT3;
-    int32_t  imm12 = (cmd>>20)&IMM12;
+    int32_t  imm12 = ((int32_t)cmd>>20)&SIGN_ALL;
     switch(funct3){
         /*addi*/
         case 0x0:
@@ -353,6 +353,7 @@ void I_check(cmd_info_t * cmd_info){
             }
             /*c.addi rd=rs1!=0, imm!=0*/
             else if(rd==rs1 && !rd && !imm12 && imm12<=31 && imm12>=-32){
+                printf("c.addi");
                 cmd_info->state = COMPRESSIBLE;
                 cmd_info->c_format = CI;
                 return;
