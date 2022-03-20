@@ -12,7 +12,6 @@ void CR_compress(cmd_info_t * cmd_info){
     uint32_t CR_rdORrs1 = 0;
     uint32_t CR_rs2 = 0;
     uint32_t CR_op= 0;
-
     /*if the RISCV32 command is R,then in CR_compress the command is [add] */
     if (cmd_info->format == R)
     {
@@ -38,9 +37,10 @@ void CR_compress(cmd_info_t * cmd_info){
             /* the cmd is [c.mv]*/
         }
     }
-    /* if the RISCV32 command is I,then in CR_compress the command is [jalr]*/
-    else if(cmd_info->format == I)
+    /* if the RISCV32 command is I,opcode is JI then in CR_compress the command is [jalr]*/
+    else if(cmd_info->format == JI)
     {
+        
         uint32_t Old_rd = (cmd_info->cmd>>7)&REGISTER;
         if (Old_rd == 0x0)
         {
