@@ -336,7 +336,7 @@ void SB_check(cmd_info_t * cmd_info){
     else if(rs2!=0)
         cmd_info->state = INCOMPRESSIBLE;
     else{
-        cmd_info->state = UNSURE;
+        cmd_info->state = COMPRESSIBLE;
         cmd_info->c_format = CB_T1;
     }
 }
@@ -380,7 +380,7 @@ void UJ_check(cmd_info_t * cmd_info){
     if(rd>=2)
         cmd_info->state = INCOMPRESSIBLE;
     else{
-        cmd_info->state = UNSURE;
+        cmd_info->state = COMPRESSIBLE;
         cmd_info ->c_format = CJ;
     }
 }
