@@ -28,7 +28,7 @@ typedef enum{
 }RVC_Format_e;
 
 typedef enum{
-    UNSURE,
+    B_J_INCOMPRESSIBLE,
     COMPRESSIBLE,
     INCOMPRESSIBLE
 }cmd_state_t;

@@ -43,7 +43,7 @@ void output_handler(cmd_info_t  * cmd_info,FILE * output_file){
         uint32_t j=0;
         uint8_t bit;
         cmd = cmd_info[i].cmd;
-        if(cmd_info[i].state ==INCOMPRESSIBLE){
+        if(cmd_info[i].state !=COMPRESSIBLE){
             for(j=0;j<32;j++){
                 bit = ((cmd<<j)&HIGHEST_BIT)>>31;
                 fputc(bit+'0',output_file);

@@ -18,7 +18,7 @@ void CR_compress(cmd_info_t * cmd_info){
         /*get the parameters of the old value according to the format*/
         uint32_t Old_rd = (cmd_info->cmd>>7)&REGISTER;
         uint32_t Old_rs1 = (cmd_info->cmd>>15)&REGISTER;
-        uint32_t Old_rs2 = (cmd_info->cmd>20)&REGISTER;
+        uint32_t Old_rs2 = (cmd_info->cmd>>20)&REGISTER;
         if (Old_rd == Old_rs1)
         {
             /*the cmd is [c.add]*/
@@ -40,20 +40,20 @@ void CR_compress(cmd_info_t * cmd_info){
     /* if the RISCV32 command is I,opcode is JI then in CR_compress the command is [jalr]*/
     else if(cmd_info->format == JI)
     {
-        
+        uint32_t Old_rs1 = (cmd_info->cmd>>15)&REGISTER;
         uint32_t Old_rd = (cmd_info->cmd>>7)&REGISTER;
         if (Old_rd == 0x0)
         {
             /* the cmd is [c.jr] */
             CR_funct4 = 0x8;
-            CR_rdORrs1 = Old_rd;
+            CR_rdORrs1 = Old_rs1;
             CR_rs2 = 0;
             CR_op = 0x2;
         }
         else
         {
             CR_funct4 = 0x9;
-            CR_rdORrs1 = Old_rd;
+            CR_rdORrs1 = Old_rs1;
             CR_rs2 = 0;
             CR_op = 0x2;
             /* the cmd is [c.jalr] */
@@ -471,11 +471,11 @@ void SB_check(cmd_info_t * cmd_info){
     uint32_t rs1 = (cmd>>15)&REGISTER;
     uint32_t rs2 = (cmd>>20)&REGISTER;
     if(funct3 >=2)
-        cmd_info->state = INCOMPRESSIBLE;
+        cmd_info->state = B_J_INCOMPRESSIBLE;
     else if(rs1>=16 || rs1<=7)
-        cmd_info->state = INCOMPRESSIBLE;
+        cmd_info->state = B_J_INCOMPRESSIBLE;
     else if(rs2!=0)
-        cmd_info->state = INCOMPRESSIBLE;
+        cmd_info->state = B_J_INCOMPRESSIBLE;
     else{
         cmd_info->state = COMPRESSIBLE;
         cmd_info->c_format = CB_T1;
@@ -519,7 +519,7 @@ void UJ_check(cmd_info_t * cmd_info){
     uint32_t cmd = cmd_info->cmd;
     uint32_t rd = (cmd>>7)&REGISTER;
     if(rd>=2)
-        cmd_info->state = INCOMPRESSIBLE;
+        cmd_info->state = B_J_INCOMPRESSIBLE;
     else{
         cmd_info->state = COMPRESSIBLE;
         cmd_info ->c_format = CJ;
@@ -558,6 +558,8 @@ void handle_unsure(cmd_info_t * cmd_info){
     uint32_t n_cmd = 0x1;
     for(i=0;i<cmd_num;i++){
         uint32_t cmd = cmd_info[i].cmd;
+        if(cmd_info[i].state==INCOMPRESSIBLE)
+            continue;
         /*c.j and c.jar*/
         if(cmd_info[i].c_format == CJ){
             uint32_t rd = (cmd>>7)&REGISTER;
@@ -597,7 +599,8 @@ void handle_unsure(cmd_info_t * cmd_info){
             /*c.j*/
             else
                 n_cmd|=0xa000;
-            cmd_info[i].cmd = n_cmd;
+            if(cmd_info[i].state==COMPRESSIBLE)
+                cmd_info[i].cmd = n_cmd;
         }
         /*c.beqz and c.bnez*/
         else if(cmd_info[i].c_format == CB_T1){
@@ -634,7 +637,8 @@ void handle_unsure(cmd_info_t * cmd_info){
             /*c.bnez*/
             else
                 n_cmd |=0xe000;
-            cmd_info[i].cmd = n_cmd;
+            if(cmd_info[i].state==COMPRESSIBLE)
+                cmd_info[i].cmd = n_cmd;
         }
     }
 }
