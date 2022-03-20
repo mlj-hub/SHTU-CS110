@@ -352,8 +352,7 @@ void I_check(cmd_info_t * cmd_info){
                 return;
             }
             /*c.addi rd=rs1!=0, imm!=0*/
-            else if(rd==rs1 && !rd && !imm12 && imm12<=31 && imm12>=-32){
-                printf("c.addi");
+            else if(rd==rs1 && rd && imm12 && imm12<=31 && imm12>=-32){
                 cmd_info->state = COMPRESSIBLE;
                 cmd_info->c_format = CI;
                 return;
@@ -400,7 +399,7 @@ void LI_check(cmd_info_t * cmd_info){
     /*get parameters according to format*/
     uint32_t rd = (cmd>>7)&REGISTER;
     uint32_t rs1 = (cmd>>15)&REGISTER;
-    int32_t  imm12 = (cmd>>20)&IMM12;
+    int32_t  imm12 = ((int32_t)cmd>>20)&SIGN_ALL;
     uint32_t funct3 = (cmd>>12)&FUNCT3;
     /*check whether it is lw*/
     if(funct3 != 0x2)
@@ -431,13 +430,16 @@ void LI_check(cmd_info_t * cmd_info){
 void S_check(cmd_info_t * cmd_info){
     uint32_t cmd = cmd_info ->cmd;
     /*get parameters according to format*/
+    int32_t imm5=0;
     int32_t imm12 = 0;
+    int32_t imm7=0;
     uint32_t funct3 = (cmd>>12)&FUNCT3;
     uint32_t rs1 = (cmd>>15)&REGISTER;
     uint32_t rs2 = (cmd>>20)&REGISTER;
     /*get imm from two part of the cmd*/
-    imm12 |= (cmd>>7)&IMM5;
-    imm12 |= (cmd>>25)&IMM7;
+    imm5 = (cmd>>7)&IMM5;
+    imm7=((int32_t)cmd>>25)&SIGN_ALL;
+    imm12 = (imm7<<5)|imm5;
     /*check whether the cmd is sw*/
     if(funct3 != 0x2)
         cmd_info->state = INCOMPRESSIBLE;
