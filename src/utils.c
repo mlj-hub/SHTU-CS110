@@ -10,9 +10,12 @@ uint32_t cmd_num = 0; /*indicate number of the input cmd*/
 uint32_t * input_handler(FILE * input_file){
     /*uint8_t flag = 0;*/
     uint32_t * cmd_data = (uint32_t *)calloc(sizeof(uint32_t),MAX_CMD_NUMBER);  /*array which store the cmd in uint32_t form*/
-    char data=0;  /*used to store the character read from the input file*/
-    uint32_t i,index; /*i for bit shift operation and index indicate the writing position of cmd_data*/
-    uint32_t cmd=0;/*used to store the cmd*/
+    /*used to store the character read from the input file*/
+    char data=0;  
+    /*i for bit shift operation and index indicate the writing position of cmd_data*/
+    uint32_t i,index; 
+    /*used to store the cmd*/
+    uint32_t cmd=0;
     i=31;index=0;
     /*loop to read in all cmd */
     while(data!=EOF){
@@ -20,8 +23,11 @@ uint32_t * input_handler(FILE * input_file){
         /*handle with \n, space, \t or etc */
         if(data!='0' && data!='1'){
             if(cmd)
+            /*store cmd*/
                 cmd_data[index++]=cmd;
+            /*reset i*/
             i=31;
+            /*rest cmd*/
             cmd = 0;
         }
         /*read in bits, shift them then adding to cmd*/
@@ -70,5 +76,6 @@ void output_handler(cmd_info_t  * cmd_info,FILE * output_file){
             fputc('\n',output_file);
         }
     }
+    /*free cmd_info*/
     free(cmd_info);
 }
