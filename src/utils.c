@@ -37,25 +37,36 @@ uint32_t * input_handler(FILE * input_file){
 }
 
 void output_handler(cmd_info_t  * cmd_info,FILE * output_file){
+    /*initialize parameters*/
     uint32_t i = 0;
     uint32_t cmd;
+    /*transerve the cmd*/
     for(i=0;i<cmd_num;i++){
+        /*initialize the parameters*/
         uint32_t j=0;
         uint8_t bit;
+        /*get cmd*/
         cmd = cmd_info[i].cmd;
+        /*if imcompressible, write 32bits*/
         if(cmd_info[i].state !=COMPRESSIBLE){
             for(j=0;j<32;j++){
+                /*left shift j bits*/
                 bit = ((cmd<<j)&HIGHEST_BIT)>>31;
                 fputc(bit+'0',output_file);
             }
+            /*a new line*/
             fputc('\n',output_file);
         }
+        /*if compressible. write 16 bits*/
         else{
+            /*cmd shift left 16*/
             cmd<<=16;
             for(j=0;j<16;j++){
+                /*shift left j*/
                 bit = ((cmd<<j)&HIGHEST_BIT)>>31;
                 fputc(bit+'0',output_file);
             }
+            /*a new line*/
             fputc('\n',output_file);
         }
     }
