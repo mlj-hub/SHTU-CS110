@@ -87,15 +87,15 @@ void CS_compress(cmd_info_t * cmd_info)
         uint32_t CS_T1_RS2 = 0;
         uint32_t CS_T1_OP = 0;
         /*parameters of the RISCV-32 Command CS_T2*/
-        uint32_t Old_imm12 = 0;
-        uint32_t Old_imm5 = 0;
-        uint32_t Old_imm7 = 0;
+        int32_t Old_imm12 = 0;
+        int32_t Old_imm5 = 0;
+        int32_t Old_imm7 = 0;
         /*get the parameters of old cmd */
         uint32_t Old_rs1 = (cmd_info->cmd>>15)&REGISTER;
         uint32_t Old_rs2 = (cmd_info->cmd>>20)&REGISTER;
         /*get imm from two part of the cmd*/
         Old_imm5 = (cmd_info->cmd>>7)&IMM5;
-        Old_imm7= ((int32_t)cmd_info->cmd>>25)&SIGN_ALL;
+        Old_imm7= ( ((int32_t)cmd_info->cmd) >>25 )&SIGN_ALL;
         Old_imm12 = (Old_imm7<<5)|Old_imm5;
         /*get imm from two part of the cmd*/
         /* the  cmd is [c.sub]*/
