@@ -149,6 +149,26 @@ void CS_compress(cmd_info_t * cmd_info)
 
 }
 /*check add,and,or,xor,sub*/
+void CL_compress(cmd_info_t *cmd_info)
+{
+    /* the parameter of I*/
+    uint32_t Old_rd = (cmd_info->cmd>>7)&REGISTER;
+    uint32_t Old_rs1 = (cmd_info->cmd>>15)&REGISTER;
+    uint32_t Old_funct3 = (cmd_info->cmd>>12)&FUNCT3;
+    int32_t  Old_imm12 = (cmd_info->cmd>>20)&IMM12;
+    /* the parameter of CL*/
+    uint32_t CL_funct3 = 2;
+    uint32_t CL_IMM3 = (Old_imm12>>3) & 0x7;
+    uint32_t CL_RS1 = Old_rs1 - 8;
+    uint32_t CL_IMM2 = 0;
+    uint32_t CL_RD= Old_rd - 8;
+    uint32_t CL_OP = 0;
+    CL_IMM2 += ((Old_imm12 >> 2) & 0x1) <<1 ;
+    CL_IMM2 += (Old_imm12 >> 6) & 0x1;
+    cmd_info->cmd = CL_OP + (CL_RD << 2) + (CL_IMM2<<5) +\
+                    (CL_RS1 << 7) + (CL_IMM3 << 10) + (CL_funct3 << 13);
+
+}
 void R_check(cmd_info_t * cmd_info){
     uint32_t cmd = cmd_info->cmd;
     /*get parameters according to the format*/
