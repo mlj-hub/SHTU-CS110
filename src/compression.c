@@ -323,7 +323,7 @@ void S_check(cmd_info_t * cmd_info){
         cmd_info ->c_format = CS_T1;
     }
 }
-
+/*bne,beq*/
 void SB_check(cmd_info_t * cmd_info){
     uint32_t cmd = cmd_info->cmd;
     uint32_t funct3 = (cmd>>12)&REGISTER;
@@ -336,7 +336,7 @@ void SB_check(cmd_info_t * cmd_info){
     else if(rs2!=0)
         cmd_info->state = INCOMPRESSIBLE;
     else{
-        cmd_info->state = COMPRESSIBLE;
+        cmd_info->state = UNSURE;
         cmd_info->c_format = CB_T1;
     }
 }
@@ -373,14 +373,14 @@ void U_check(cmd_info_t * cmd_info){
     }
     cmd_info -> state =INCOMPRESSIBLE;
 }
-
+/*jar*/
 void UJ_check(cmd_info_t * cmd_info){
     uint32_t cmd = cmd_info->cmd;
     uint32_t rd = (cmd>>7)&REGISTER;
     if(rd>=2)
         cmd_info->state = INCOMPRESSIBLE;
     else{
-        cmd_info->state = COMPRESSIBLE;
+        cmd_info->state = UNSURE;
         cmd_info ->c_format = CJ;
     }
 }
