@@ -455,7 +455,7 @@ void LI_check(cmd_info_t * cmd_info){
     else if(imm12 % 4!=0)
         cmd_info->state = INCOMPRESSIBLE;
     /*incompressible if imm is larger than 64*/
-    else if ((imm12>>2)>=64)
+    else if ((imm12>>2)>=32)
         cmd_info->state = INCOMPRESSIBLE;
     /*otherwise compressible*/
     else{
