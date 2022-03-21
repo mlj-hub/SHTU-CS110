@@ -216,7 +216,7 @@ void CI_compress(cmd_info_t *cmd_info)
         uint32_t Old_rs1 = (cmd_info->cmd>>15)&REGISTER;
         /*set funct3*/
         uint32_t Old_funct3 = (cmd_info->cmd>>12)&FUNCT3;
-        int32_t  Old_imm12 = (cmd_info->cmd>>20)&IMM12;
+        int32_t  Old_imm12 = ((int32_t)cmd_info->cmd>>20)&SIGN_ALL;
         /*addi*/
         if (Old_funct3 == 0)
         {
