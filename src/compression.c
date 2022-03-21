@@ -381,11 +381,8 @@ void I_check(cmd_info_t * cmd_info){
         /*addi*/
         case 0x0:
             /*c.li rd!=0,rs1=0,-32<=imm12<=31*/
-<<<<<<< HEAD
             if(rd && !rs1 && imm12<=31 && imm12>= -32 ){
-=======
-            if(rd && !rs1 && imm12<=31 && imm12>=-32){
->>>>>>> ee0c58c332b7bf7100cd9d30848a6b84b8498970
+
                 /*conditions when compressible*/
                 cmd_info->state = COMPRESSIBLE;
                 cmd_info->c_format = CI;
