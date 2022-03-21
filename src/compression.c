@@ -216,7 +216,7 @@ void CI_compress(cmd_info_t *cmd_info)
         uint32_t Old_rs1 = (cmd_info->cmd>>15)&REGISTER;
         /*set funct3*/
         uint32_t Old_funct3 = (cmd_info->cmd>>12)&FUNCT3;
-        int32_t  Old_imm12 = (cmd_info->cmd>>20)&IMM12;
+        int32_t  Old_imm12 = ((int32_t)cmd_info->cmd>>20)&SIGN_ALL;
         /*addi*/
         if (Old_funct3 == 0)
         {
@@ -338,6 +338,7 @@ void R_check(cmd_info_t * cmd_info){
             /*c.sub*/
             else{
                 if(rd==rs1 && rd>=8 && rd<=15 &&rs2 >=8 && rs2<=15){
+
                     /*conditions if compressible*/
                     cmd_info->state = COMPRESSIBLE;
                     cmd_info->c_format = CS_T2;
@@ -353,7 +354,7 @@ void R_check(cmd_info_t * cmd_info){
         case 0x6:
         case 0x7:
             /*compressible only when rd is same with rs1*/
-            if(rd==rs1 && rd<=15 && rd>=8 &&rs2 >=8 && rs2<=15){
+            if(rd==rs1 && rd<=15 && rd>=8 && rs2<=15 && rs2>=8){
                 cmd_info -> state = COMPRESSIBLE;
                 cmd_info -> c_format = CS_T2;
                 /*return */
@@ -398,7 +399,7 @@ void I_check(cmd_info_t * cmd_info){
             break;
         /*slli*/
         case 0x1:
-            if(((cmd>>20)&0x20) ==0 && rd==rs1 && rd!=0){
+            if(((cmd>>20)&0xfe0) ==0 && rd==rs1 && rd!=0){
                 /*conditions when compressible*/
                 cmd_info -> c_format = CI;
                 cmd_info -> state = COMPRESSIBLE;
@@ -409,7 +410,7 @@ void I_check(cmd_info_t * cmd_info){
             break;
         /*srli or srai*/
         case 0x5:
-            if(rd == rs1 && ((cmd>>20)&0x20) ==0 && rd>=8 && rd<=15 && imm12>=0){
+            if(rd == rs1 && (((cmd>>25)&0x7f) ==0 || ((cmd>>25)&0x7f)==0x20) && rd>=8 && rd<=15 && imm12>=0){
                 /*conditions when compressible*/
                 cmd_info -> c_format = CB_T2;
                 cmd_info -> state = COMPRESSIBLE;
