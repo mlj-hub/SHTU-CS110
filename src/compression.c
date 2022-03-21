@@ -336,9 +336,8 @@ void R_check(cmd_info_t * cmd_info){
                 }
             }
             /*c.sub*/
-            else{
+            else if(funct7 ==0x20){
                 if(rd==rs1 && rd>=8 && rd<=15 &&rs2 >=8 && rs2<=15){
-
                     /*conditions if compressible*/
                     cmd_info->state = COMPRESSIBLE;
                     cmd_info->c_format = CS_T2;
@@ -348,6 +347,8 @@ void R_check(cmd_info_t * cmd_info){
             }
             /*cannot be compressed*/
             cmd_info-> state = INCOMPRESSIBLE;
+            /*no compressed format*/
+            cmd_info ->c_format = NONE;
             break;
         /*xor,and,or share the same condition when compressible*/
         case 0x4:
@@ -362,10 +363,14 @@ void R_check(cmd_info_t * cmd_info){
             }
             /*otherwise, incompressible*/
             cmd_info->state = INCOMPRESSIBLE;
+            /*no compressed format*/
+            cmd_info ->c_format = NONE;
             break;
         default:
             /*otherwise, incompressible*/
             cmd_info->state = INCOMPRESSIBLE;
+            /*no compressed format*/
+            cmd_info ->c_format = NONE;
     }
 }
 /*right*/
@@ -400,10 +405,12 @@ void I_check(cmd_info_t * cmd_info){
             }
             /*otherwise it is incompressible*/
             cmd_info ->state = INCOMPRESSIBLE;
+            /*no compressed format*/
+            cmd_info ->c_format = NONE;
             break;
         /*slli*/
         case 0x1:
-            if(((cmd>>20)&0xfe0) ==0 && rd==rs1 && rd!=0 && shamt>0){
+            if(rd==rs1 && rd!=0 && shamt>0){
                 /*conditions when compressible*/
                 cmd_info -> c_format = CI;
                 cmd_info -> state = COMPRESSIBLE;
@@ -411,10 +418,12 @@ void I_check(cmd_info_t * cmd_info){
             }
             /*otherwise, incompressible*/
             cmd_info->state = INCOMPRESSIBLE;
+            /*no compressed format*/
+            cmd_info ->c_format = NONE;
             break;
         /*srli or srai*/
         case 0x5:
-            if(rd == rs1 && (((cmd>>25)&0x7f) ==0 || ((cmd>>25)&0x7f)==0x20) && rd>=8 && rd<=15 && shamt>0){
+            if(rd == rs1 && rd>=8 && rd<=15 && shamt>0){
                 /*conditions when compressible*/
                 cmd_info -> c_format = CB_T2;
                 cmd_info -> state = COMPRESSIBLE;
@@ -422,6 +431,8 @@ void I_check(cmd_info_t * cmd_info){
             }
             /*otherwise, incompressible*/
             cmd_info->state = INCOMPRESSIBLE;
+            /*no compressed format*/
+            cmd_info ->c_format = NONE;
             break;
         /*andi*/
         case 0x7:
@@ -434,10 +445,14 @@ void I_check(cmd_info_t * cmd_info){
             }
             /*otherwsie, incompressible*/
             cmd_info -> state = INCOMPRESSIBLE;
+            /*no compressed format*/
+            cmd_info ->c_format = NONE;
             break;
         default:
             /*otherwise, incompressible*/
             cmd_info -> state = INCOMPRESSIBLE;
+            /*no compressed format*/
+            cmd_info ->c_format = NONE;
     }
 }
 
@@ -450,23 +465,47 @@ void LI_check(cmd_info_t * cmd_info){
     int32_t  imm12 = (((int32_t)cmd)>>20)&SIGN_ALL;
     uint32_t funct3 = (cmd>>12)&FUNCT3;
     /*check whether it is lw*/
-    if(funct3 != 0x2)
+    if(funct3 != 0x2){
+        /*incompressible*/
         cmd_info->state = INCOMPRESSIBLE;
+        /*no compressed format*/
+        cmd_info ->c_format = NONE;
+    }
     /*check whether rs1 is between x8-x15*/
-    else if(rs1>=16 || rs1<=7)
+    else if(rs1>=16 || rs1<=7){
+        /*incompressible*/
         cmd_info->state = INCOMPRESSIBLE;
+        /*no compressed format*/
+        cmd_info ->c_format = NONE;
+    }
     /*check whether rd is between x8-x15*/
-    else if(rd>=16 || rd<=7)
+    else if(rd>=16 || rd<=7){
+        /*incompressible*/
         cmd_info->state = INCOMPRESSIBLE;
+        /*no compressed format*/
+        cmd_info ->c_format = NONE;
+    }
     /*incompressible if offset is negative  */
-    else if(imm12 < 0)
+    else if(imm12 < 0){
+        /*incompressible*/
         cmd_info->state = INCOMPRESSIBLE;
+        /*no compressed format*/
+        cmd_info ->c_format = NONE;
+    }
     /*incompressible if the least two significant bits is non-zero*/
-    else if(imm12 % 4!=0)
+    else if(imm12 % 4!=0){
+        /*incompressible*/
         cmd_info->state = INCOMPRESSIBLE;
+        /*no compressed format*/
+        cmd_info ->c_format = NONE;
+    }
     /*incompressible if imm is larger than 64*/
-    else if ((imm12>>2)>=32)
+    else if ((imm12>>2)>=32){
+        /*incompressible*/
         cmd_info->state = INCOMPRESSIBLE;
+        /*no compressed format*/
+        cmd_info ->c_format = NONE;
+    }
     /*otherwise compressible*/
     else{
         cmd_info->state = COMPRESSIBLE;
@@ -490,23 +529,45 @@ void S_check(cmd_info_t * cmd_info){
     imm7=(((int32_t)cmd)>>25)&SIGN_ALL;
     imm12 = (imm7<<5)|imm5;
     /*check whether the cmd is sw*/
-    if(funct3 != 0x2)
+    if(funct3 != 0x2){
+        /*incompressible*/
         cmd_info->state = INCOMPRESSIBLE;
+        /*no compressed format*/
+        cmd_info ->c_format = NONE;
+    }
     /*check whether rs1 is between x8-x15*/
-    else if(rs1>=16 || rs1<=7)
+    else if(rs1>=16 || rs1<=7){
+        /*incompressible*/
         cmd_info->state = INCOMPRESSIBLE;
+        /*no compressed format*/
+        cmd_info ->c_format = NONE;
+    }
     /*check whether rs2 is between x8-x15*/
-    else if(rs2>=16 || rs2<=7)
+    else if(rs2>=16 || rs2<=7){
+        /*incompressible*/
         cmd_info->state = INCOMPRESSIBLE;
+        /*no compressed format*/
+        cmd_info ->c_format = NONE;
+    }
     /*incompressible if offset is negative*/
-    else if(imm12 < 0)
+    else if(imm12 < 0){
+        /*incompressible*/
         cmd_info->state = INCOMPRESSIBLE;
+        /*no compressed format*/
+        cmd_info ->c_format = NONE;
+    }
     /*incompressible if the least two significant bits is non-zero*/
-    else if(imm12 % 4!=0)
+    else if(imm12 % 4!=0){
         cmd_info->state = INCOMPRESSIBLE;
+        /*no c_format*/
+        cmd_info->c_format = NONE;
+    }
     /*incompressible if imm is larger than 64*/
-    else if ((imm12>>2)>=32)
+    else if ((imm12>>2)>=32){
         cmd_info->state = INCOMPRESSIBLE;
+        /*no c_format*/
+        cmd_info->c_format = NONE;
+    }
     /*otherwise compressible*/
     else{
         cmd_info->state = COMPRESSIBLE;
@@ -522,14 +583,22 @@ void SB_check(cmd_info_t * cmd_info){
     uint32_t rs1 = (cmd>>15)&REGISTER;
     uint32_t rs2 = (cmd>>20)&REGISTER;
     /*funct3 larger than 2, incompressible*/
-    if(funct3 >=2)
+    if(funct3 >=2){
         cmd_info->state = B_J_INCOMPRESSIBLE;
+        cmd_info->c_format = NONE;
+    }
     /*register not in the range*/
-    else if(rs1>=16 || rs1<=7)
+    else if(rs1>=16 || rs1<=7){
         cmd_info->state = B_J_INCOMPRESSIBLE;
+        /*no c_format*/
+        cmd_info->c_format = NONE;
+    }
     /*rs2 is not zero*/
-    else if(rs2!=0)
+    else if(rs2!=0){
         cmd_info->state = B_J_INCOMPRESSIBLE;
+        /*no c_format*/
+        cmd_info->c_format = NONE;
+    }
     /*otherwise, compressible*/
     else{
         cmd_info->state = COMPRESSIBLE;
@@ -548,11 +617,15 @@ void JI_check(cmd_info_t * cmd_info){
     uint32_t rs1 = (cmd>>15)&REGISTER;
     uint32_t  imm12 = (cmd>>20)&IMM12;
     /*check funct3 to determine whether the command is jalr*/
-    if(funct3 != 0x0)
+    if(funct3 != 0x0){
         cmd_info->state = INCOMPRESSIBLE;
+        cmd_info->c_format = NONE;
+    }
     /*incompressible if imm is non-zero or rs1 is x0 or rd is not x0 or x1 */
-    else if(imm12 || !rs1 || rd>=2)
+    else if(imm12 || !rs1 || rd>=2){
         cmd_info->state =INCOMPRESSIBLE;
+        cmd_info->c_format = NONE;
+    }
     else{
         /*otherwise, compressible*/
         cmd_info->state= COMPRESSIBLE;
@@ -584,6 +657,7 @@ void U_check(cmd_info_t * cmd_info){
     }
     /*otherwise, incompressible*/
     cmd_info -> state =INCOMPRESSIBLE;
+    cmd_info->c_format = NONE;
 }
 /*jar*/
 void UJ_check(cmd_info_t * cmd_info){
@@ -591,8 +665,11 @@ void UJ_check(cmd_info_t * cmd_info){
     uint32_t cmd = cmd_info->cmd;
     uint32_t rd = (cmd>>7)&REGISTER;
     /*if rd is not zero or x1*/
-    if(rd>=2)
+    if(rd>=2){
         cmd_info->state = B_J_INCOMPRESSIBLE;
+        cmd_info->c_format = NONE;
+    }
+        
     else{
         /*otherwise, compressible*/
         cmd_info->state = COMPRESSIBLE;
@@ -845,6 +922,8 @@ void format_compressible_check(cmd_info_t * cmd_info,uint32_t * cmd_data){
             default:
                 cmd_info[i].format = UNVAILD;
                 cmd_info[i].state = INCOMPRESSIBLE;
+                /*no c_format*/
+                cmd_info[i].c_format = NONE;
         }
     }
 }

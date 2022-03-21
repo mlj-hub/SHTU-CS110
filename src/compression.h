@@ -24,7 +24,8 @@ typedef enum{
     CS_T2 ,
     CB_T1 ,
     CB_T2 ,
-    CJ
+    CJ,
+    NONE
 }RVC_Format_e;
 
 typedef enum{
