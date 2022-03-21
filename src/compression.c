@@ -378,6 +378,7 @@ void I_check(cmd_info_t * cmd_info){
     uint32_t funct3 = (cmd>>12)&FUNCT3;
     int32_t  imm12 = (((int32_t)cmd)>>20)&SIGN_ALL;
     int32_t shamt = (cmd&0x3f00000);
+    /*get shamt*/
     shamt>>=20;
     switch(funct3){
         /*addi*/
