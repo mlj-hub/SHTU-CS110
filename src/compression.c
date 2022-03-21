@@ -95,7 +95,7 @@ void CS_compress(cmd_info_t * cmd_info)
         uint32_t Old_rs2 = (cmd_info->cmd>>20)&REGISTER;
         /*get imm from two part of the cmd*/
         Old_imm5 = (cmd_info->cmd>>7)&IMM5;
-        Old_imm7= ( ((int32_t)cmd_info->cmd) >>25 )&SIGN_ALL;
+        Old_imm7= ( (((int32_t)(cmd_info->cmd))) >>25 )&SIGN_ALL;
         Old_imm12 = (Old_imm7<<5)|Old_imm5;
         /*get imm from two part of the cmd*/
         /* the  cmd is [c.sub]*/
@@ -169,7 +169,7 @@ void CL_compress(cmd_info_t *cmd_info)
     /* the parameter of I*/
     uint32_t Old_rd = (cmd_info->cmd>>7)&REGISTER;
     uint32_t Old_rs1 = (cmd_info->cmd>>15)&REGISTER;
-    int32_t  Old_imm12 = (((int32_t)cmd_info->cmd)>>20)&IMM12;
+    int32_t  Old_imm12 = ((((int32_t)(cmd_info->cmd)))>>20)&IMM12;
     /* the parameter of CL*/
     uint32_t CL_funct3 = 2;
     uint32_t CL_IMM3 = (Old_imm12>>3) & 0x7;
@@ -216,7 +216,7 @@ void CI_compress(cmd_info_t *cmd_info)
         uint32_t Old_rs1 = (cmd_info->cmd>>15)&REGISTER;
         /*set funct3*/
         uint32_t Old_funct3 = (cmd_info->cmd>>12)&FUNCT3;
-        int32_t  Old_imm12 = ((int32_t)cmd_info->cmd>>20)&SIGN_ALL;
+        int32_t  Old_imm12 = (((int32_t)(cmd_info->cmd))>>20)&SIGN_ALL;
         /*addi*/
         if (Old_funct3 == 0)
         {
@@ -376,7 +376,7 @@ void I_check(cmd_info_t * cmd_info){
     uint32_t rs1 = (cmd>>15)&REGISTER;
     /*get funct3*/
     uint32_t funct3 = (cmd>>12)&FUNCT3;
-    int32_t  imm12 = ((int32_t)cmd>>20)&SIGN_ALL;
+    int32_t  imm12 = (((int32_t)cmd)>>20)&SIGN_ALL;
     switch(funct3){
         /*addi*/
         case 0x0:
@@ -399,7 +399,7 @@ void I_check(cmd_info_t * cmd_info){
             break;
         /*slli*/
         case 0x1:
-            if(((cmd>>20)&0xfe0) ==0 && rd==rs1 && rd!=0){
+            if(((cmd>>20)&0xfe0) ==0 && rd==rs1 && rd!=0 && imm12>=0){
                 /*conditions when compressible*/
                 cmd_info -> c_format = CI;
                 cmd_info -> state = COMPRESSIBLE;
@@ -443,7 +443,7 @@ void LI_check(cmd_info_t * cmd_info){
     /*get parameters according to format*/
     uint32_t rd = (cmd>>7)&REGISTER;
     uint32_t rs1 = (cmd>>15)&REGISTER;
-    int32_t  imm12 = ((int32_t)cmd>>20)&SIGN_ALL;
+    int32_t  imm12 = (((int32_t)cmd)>>20)&SIGN_ALL;
     uint32_t funct3 = (cmd>>12)&FUNCT3;
     /*check whether it is lw*/
     if(funct3 != 0x2)
@@ -483,7 +483,7 @@ void S_check(cmd_info_t * cmd_info){
     uint32_t rs2 = (cmd>>20)&REGISTER;
     /*get imm from two part of the cmd*/
     imm5 = (cmd>>7)&IMM5;
-    imm7=((int32_t)cmd>>25)&SIGN_ALL;
+    imm7=(((int32_t)cmd)>>25)&SIGN_ALL;
     imm12 = (imm7<<5)|imm5;
     /*check whether the cmd is sw*/
     if(funct3 != 0x2)
