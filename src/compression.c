@@ -866,7 +866,9 @@ void handle_unsure(cmd_info_t * cmd_info){
                 imm7 |=(((offset>>12)&0x1)<<6);
                 /*get n_cmd*/
                 cmd_info[i].cmd&=0x01fff07f;
-                cmd_info[i].cmd|=((imm7<<25)|(imm5<<7));
+                /*get n_cmd*/
+                cmd_info[i].cmd|=(imm5<<7);
+                cmd_info[i].cmd|=(imm7>>25);
             }
         }
     }
