@@ -736,7 +736,7 @@ void handle_unsure(cmd_info_t * cmd_info){
         if(cmd_info[i].format == UJ){
             /*get rd and imm20*/
             uint32_t rd = (cmd>>7)&REGISTER;
-            uint32_t imm20 = ((int32_t)cmd>>12)&SIGN_ALL;
+            int32_t imm20 = ((int32_t)cmd>>12)&SIGN_ALL;
             /*get offset*/
             int32_t offset = imm20&0xfff00000;
             /*get offset according to the green card*/
