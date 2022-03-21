@@ -410,7 +410,7 @@ void I_check(cmd_info_t * cmd_info){
             break;
         /*slli*/
         case 0x1:
-            if(rd==rs1 && rd!=0 && shamt>0){
+            if(rd==rs1 && rd!=0 && shamt>=0){
                 /*conditions when compressible*/
                 cmd_info -> c_format = CI;
                 cmd_info -> state = COMPRESSIBLE;
@@ -423,7 +423,7 @@ void I_check(cmd_info_t * cmd_info){
             break;
         /*srli or srai*/
         case 0x5:
-            if(rd == rs1 && rd>=8 && rd<=15 && shamt>0){
+            if(rd == rs1 && rd>=8 && rd<=15 && shamt>=0){
                 /*conditions when compressible*/
                 cmd_info -> c_format = CB_T2;
                 cmd_info -> state = COMPRESSIBLE;
@@ -578,7 +578,7 @@ void S_check(cmd_info_t * cmd_info){
 void SB_check(cmd_info_t * cmd_info){
     /*get parameters*/
     uint32_t cmd = cmd_info->cmd;
-    uint32_t funct3 = (cmd>>12)&0x7;
+    uint32_t funct3 = (cmd>>12)&FUNCT3;
     /*get register*/
     uint32_t rs1 = (cmd>>15)&REGISTER;
     uint32_t rs2 = (cmd>>20)&REGISTER;
