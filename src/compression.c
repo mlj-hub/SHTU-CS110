@@ -753,39 +753,30 @@ void handle_unsure(cmd_info_t * cmd_info){
             }
             if(cmd_info[i].state == COMPRESSIBLE){
                 /*get new cmd*/
-                n_cmd |=((offset&0x20)>>3);
-                n_cmd |=((offset&0x6)<<2);
-                n_cmd |=((offset&0xc0)>>1);
-                /*get new cmd*/
-                n_cmd |=(rd<<7);
-                n_cmd |=((offset&0x18)<<7);
-                n_cmd |=((offset&0x100)<<4);
+                n_cmd|=((offset>>5)&0x1)<<2;
+                n_cmd|=((offset>>1)&0x3)<<3;
+                n_cmd|=((offset>>6)&0x3)<<5;
+                n_cmd|=(rd<<7);
+                n_cmd|=((offset>>3)&0x3)<<10;
+                n_cmd|=((offset>>8)&0x1)<<12;
                 /*c.beqz*/
                 if(!funct3)
-                    n_cmd |=0xc000;
+                    n_cmd |=(0x6<<13);
                 /*c.bnez*/
                 else
-                    n_cmd |=0xe000;
+                    n_cmd |=(0x7<<13);
             /*if compressible, set the new cmd*/
                 cmd_info[i].cmd = n_cmd;
             }
             else{
-                uint32_t n_imm5=0;
-                uint32_t n_imm7=0;
-                /*clear origin imm*/
-                cmd_info[i].cmd&=(~0xf80);
-                cmd_info[i].cmd&=(~0xfe000000);
-                /*offset 11*/
-                n_imm5|=((offset>>11)&0x1);
-                /*offset 4:1*/
-                n_imm5|=(((offset>>1)&0xf)<<1);
-                /*offset 10:5*/
-                n_imm7|=((offset>>5)&0x3f);
-                /*offset 12*/
-                n_imm7|=(((offset>>12)&0x1)<<6);
-                /*get new cmd*/
-                cmd_info[i].cmd|=(n_imm5<<7);
-                cmd_info[i].cmd|=(n_imm7<<25);
+                uint32_t imm5=0;
+                uint32_t imm7=0;
+                imm5 |= ((offset>>11)&0x1);
+                imm5 |=((offset>>1)&0xf)<<1;
+                imm7 |=((offset>>5)&0x3f);
+                imm7 |=(((offset>>12)&0x1)<<6);
+                cmd_info[i].cmd&=0x01fff07f;
+                cmd_info[i].cmd|=((imm7<<25)|(imm5<<7));
             }
         }
     }
