@@ -333,7 +333,7 @@ void R_check(cmd_info_t * cmd_info){
             }
             /*c.sub*/
             else{
-                if(rd==rs1 && rd>=8 && rd<=15){
+                if(rd==rs1 && rd>=8 && rd<=15 && rs2<=15 && rs2>=8){
                     /*conditions if compressible*/
                     cmd_info->state = COMPRESSIBLE;
                     cmd_info->c_format = CS_T2;
@@ -349,7 +349,7 @@ void R_check(cmd_info_t * cmd_info){
         case 0x6:
         case 0x7:
             /*compressible only when rd is same with rs1*/
-            if(rd==rs1 && rd<=15 && rd>=8){
+            if(rd==rs1 && rd<=15 && rd>=8 && rs2<=15 && rs2>=8){
                 cmd_info -> state = COMPRESSIBLE;
                 cmd_info -> c_format = CS_T2;
                 /*return */
