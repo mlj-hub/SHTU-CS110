@@ -377,6 +377,8 @@ void I_check(cmd_info_t * cmd_info){
     /*get funct3*/
     uint32_t funct3 = (cmd>>12)&FUNCT3;
     int32_t  imm12 = (((int32_t)cmd)>>20)&SIGN_ALL;
+    int32_t shamt = (cmd&0x3f00000);
+    shamt>>=20;
     switch(funct3){
         /*addi*/
         case 0x0:
@@ -399,7 +401,7 @@ void I_check(cmd_info_t * cmd_info){
             break;
         /*slli*/
         case 0x1:
-            if(((cmd>>20)&0xfe0) ==0 && rd==rs1 && rd!=0 && imm12>=0){
+            if(((cmd>>20)&0xfe0) ==0 && rd==rs1 && rd!=0 && shamt>0){
                 /*conditions when compressible*/
                 cmd_info -> c_format = CI;
                 cmd_info -> state = COMPRESSIBLE;
@@ -410,7 +412,7 @@ void I_check(cmd_info_t * cmd_info){
             break;
         /*srli or srai*/
         case 0x5:
-            if(rd == rs1 && (((cmd>>25)&0x7f) ==0 || ((cmd>>25)&0x7f)==0x20) && rd>=8 && rd<=15 && imm12>=0){
+            if(rd == rs1 && (((cmd>>25)&0x7f) ==0 || ((cmd>>25)&0x7f)==0x20) && rd>=8 && rd<=15 && shamt>0){
                 /*conditions when compressible*/
                 cmd_info -> c_format = CB_T2;
                 cmd_info -> state = COMPRESSIBLE;
@@ -563,9 +565,15 @@ void U_check(cmd_info_t * cmd_info){
     /*get imm20*/
     int32_t imm20 = cmd&0xfffff000;
     /*highest bits are all one and 17 bit is 1*/
-
+    if((imm20&0xfffc0000) == 0xfffc0000 && (imm20&0x00020000)!=0 && rd!=0 && rd!=2 && imm20){
+        /*set c_format*/
+        cmd_info->c_format = CI;
+        /*compressible*/
+        cmd_info->state = COMPRESSIBLE;
+        return;
+    }
     /*highest bits are all 0 and 17 bit is 0*/
-    if((imm20&0xfffc0000) == 0 && (imm20&0x00020000)==0 && rd!=0 && rd!=2 && imm20){
+    else if((imm20&0xfffc0000) == 0 && (imm20&0x00020000)==0 && rd!=0 && rd!=2 && imm20){
         /*set c_format*/
         cmd_info->c_format = CI;
         /*compressible*/
