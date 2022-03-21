@@ -376,16 +376,14 @@ void I_check(cmd_info_t * cmd_info){
         /*addi*/
         case 0x0:
             /*c.li rd!=0,rs1=0,-32<=imm12<=31*/
-            /*if(rd && !rs1 && imm12<=31 && imm12>=-32){*/
-            if(rd && !rs1){
+            if(rd && !rs1 && imm12<=31 && imm12>=-32){
                 /*conditions when compressible*/
                 cmd_info->state = COMPRESSIBLE;
                 cmd_info->c_format = CI;
                 return;
             }
             /*c.addi rd=rs1!=0, imm!=0*/
-            /*else if(rd==rs1 && rd && imm12 && imm12<=31 && imm12>=-32){*/
-            else if(rd==rs1 && rd && imm12){
+            else if(rd==rs1 && rd && imm12 && imm12<=31 && imm12>=-32){
                 /*conditions when compressible*/
                 cmd_info->state = COMPRESSIBLE;
                 cmd_info->c_format = CI;
@@ -407,8 +405,7 @@ void I_check(cmd_info_t * cmd_info){
             break;
         /*srli or srai*/
         case 0x5:
-            /*if(rd == rs1 && ((cmd>>20)&0x20) ==0 && rd>=8 && rd<=15 && imm12>=0){*/
-            if(rd == rs1 && ((cmd>>20)&0x20) ==0 && rd>=8 && rd<=15){
+            if(rd == rs1 && ((cmd>>20)&0x20) ==0 && rd>=8 && rd<=15 && imm12>=0){
                 /*conditions when compressible*/
                 cmd_info -> c_format = CB_T2;
                 cmd_info -> state = COMPRESSIBLE;
@@ -420,8 +417,7 @@ void I_check(cmd_info_t * cmd_info){
         /*andi*/
         case 0x7:
             /*c.andi rd=rs1, -32<=imm12<=31*/
-            /*if(rd==rs1 && -32<=imm12 && imm12<=31 && rd>=8 && rd<=15){*/
-            if(rd==rs1 &&  rd>=8 && rd<=15){
+            if(rd==rs1 && -32<=imm12 && imm12<=31 && rd>=8 && rd<=15){
                 /*conditions when compressible*/
                 cmd_info->state = COMPRESSIBLE;
                 cmd_info->c_format = CB_T2;
@@ -460,8 +456,8 @@ void LI_check(cmd_info_t * cmd_info){
     else if(imm12 % 4!=0)
         cmd_info->state = INCOMPRESSIBLE;
     /*incompressible if imm is larger than 64*/
-    else if ((imm12>>2)>=32)
-        cmd_info->state = INCOMPRESSIBLE;
+    /*else if ((imm12>>2)>=32)
+        cmd_info->state = INCOMPRESSIBLE;*/
     /*otherwise compressible*/
     else{
         cmd_info->state = COMPRESSIBLE;
@@ -500,8 +496,8 @@ void S_check(cmd_info_t * cmd_info){
     else if(imm12 % 4!=0)
         cmd_info->state = INCOMPRESSIBLE;
     /*incompressible if imm is larger than 64*/
-    else if ((imm12>>2)>=32)
-        cmd_info->state = INCOMPRESSIBLE;
+    /*else if ((imm12>>2)>=32)
+        cmd_info->state = INCOMPRESSIBLE;*/
     /*otherwise compressible*/
     else{
         cmd_info->state = COMPRESSIBLE;
