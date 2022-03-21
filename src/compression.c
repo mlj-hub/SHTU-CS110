@@ -678,22 +678,22 @@ void handle_unsure(cmd_info_t * cmd_info){
             /*get the new cmd*/
             if(cmd_info[i].state == COMPRESSIBLE){
                 /*if compressible*/
-                n_cmd|=((offset&0x20)>>3);/*offset 5*/
-                n_cmd|=((offset&0xe)<<2); /*offset 3:1*/
-                n_cmd|=((offset&0x80)>>1); /*offset 7*/
+                n_cmd|=(((offset>>5)&0x1)<<2);/*offset 5*/
+                n_cmd|=(((offset>>1)&0x7)<<3);/*offset 3:1*/
+                n_cmd|=(((offset>>7)&0x1)<<6); /*offset 7*/
                 /*get new cmd*/
-                n_cmd|=((offset&0x40)<<1);/*offset 6*/
-                n_cmd|=((offset&0x400)>>2);/*offset 10*/
-                n_cmd|=((offset&0x300)<<1);/*offset 9:8*/
+                n_cmd|=(((offset>>6)&0x1)<<7);/*offset 6*/
+                n_cmd|=(((offset>>10)&0x1)<<8);/*offset 10*/
+                n_cmd|=(((offset>>8)&0x3)<<9);/*offset 9:8*/
                 /*get new cmd*/
-                n_cmd|=((offset&0x10)<<7);/*offset 4*/
-                n_cmd|=((offset&0x800)<<1); /*offset 11*/
+                n_cmd|=(((offset>>4)&0x1)<<11);/*offset 4*/
+                n_cmd|=(((offset>>11)&0x1)<<12); /*offset 11*/
                 /*c.jal*/
                 if(rd)
-                    n_cmd|=0x2000;
+                    n_cmd|=(0x1<<13);
                 /*c.j*/
                 else
-                    n_cmd|=0xa000;
+                    n_cmd|=(0x5<<13);
                 /*if compressible, set new cmd*/
                 cmd_info[i].cmd = n_cmd;
             }
@@ -703,11 +703,11 @@ void handle_unsure(cmd_info_t * cmd_info){
                 /*offset 19:12*/
                 n_offset |=((offset&0xff000));
                 /*offset 11*/
-                n_offset |=((offset&800)<<9);
+                n_offset |=((offset&0x800)<<9);
                 /*offset 10:1*/
                 n_offset |=((offset&0x7fe)<<20);
                 /*offset 20*/
-                n_offset |=((offset&80000)<<11);
+                n_offset |=((offset&0x80000)<<11);
                 /*clear old offset*/
                 cmd_info[i].cmd&=0xfff;
                 /*set new offset*/
