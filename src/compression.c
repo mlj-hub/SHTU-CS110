@@ -583,7 +583,7 @@ void SB_check(cmd_info_t * cmd_info){
     uint32_t rs1 = (cmd>>15)&REGISTER;
     uint32_t rs2 = (cmd>>20)&REGISTER;
     /*funct3 larger than 2, incompressible*/
-    if(funct3 !=1 && funct3 !=0){
+    if(funct3 >=2){
         cmd_info->state = B_J_INCOMPRESSIBLE;
         cmd_info->c_format = NONE;
     }
