@@ -405,7 +405,7 @@ void I_check(cmd_info_t * cmd_info){
             break;
         /*srli or srai*/
         case 0x5:
-            if(rd == rs1 && ((cmd>>20)&0x20) ==0 && rd>=8 && rd<=15){
+            if(rd == rs1 && ((cmd>>20)&0x20) ==0 && rd>=8 && rd<=15 && imm12>=0){
                 /*conditions when compressible*/
                 cmd_info -> c_format = CB_T2;
                 cmd_info -> state = COMPRESSIBLE;
@@ -629,12 +629,11 @@ void handle_compressible(cmd_info_t * cmd_info){
 }
 
 void get_uj_offset(uint32_t imm20,int32_t * offset){
-    *offset |=((imm20&0x7fe00)>>9); /*offset 10:1*/
-    *offset |=((imm20&0x100)<<2); /*offset 11*/
-    *offset |=((imm20&0xff)<<11); /*offset 19:12*/
-    *offset |=((imm20&0x80000));/*offset 20*/
+    *offset |=(((imm20>>9)&0x3ff)<<1); /*offset 10:1*/
+    *offset |=(((imm20>>8)&0x1)<<11); /*offset 11*/
+    *offset |=((imm20&0xff)<<12); /*offset 19:12*/
+    *offset |=(((imm20>>19)&0x1)<<20);/*offset 20*/
     /*set the rightest bit to 0*/
-    *offset<<=1;
 }
 
 void handle_unsure(cmd_info_t * cmd_info){
