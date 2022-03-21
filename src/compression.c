@@ -381,14 +381,14 @@ void I_check(cmd_info_t * cmd_info){
         /*addi*/
         case 0x0:
             /*c.li rd!=0,rs1=0,-32<=imm12<=31*/
-            if(rd && !rs1 && imm12<=63 ){
+            if(rd && !rs1 && imm12<=31 && imm12>=-32){
                 /*conditions when compressible*/
                 cmd_info->state = COMPRESSIBLE;
                 cmd_info->c_format = CI;
                 return;
             }
             /*c.addi rd=rs1!=0, imm!=0*/
-            else if(rd==rs1 && rd && imm12 && imm12<=63){
+            else if(rd==rs1 && rd && imm12 && imm12<=31 && imm12>=-32){
                 /*conditions when compressible*/
                 cmd_info->state = COMPRESSIBLE;
                 cmd_info->c_format = CI;
