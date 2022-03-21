@@ -756,7 +756,9 @@ void handle_unsure(cmd_info_t * cmd_info){
                 n_cmd|=((offset>>5)&0x1)<<2;
                 n_cmd|=((offset>>1)&0x3)<<3;
                 n_cmd|=((offset>>6)&0x3)<<5;
+                /*set rd*/
                 n_cmd|=(rd<<7);
+                /*set n_cmd*/
                 n_cmd|=((offset>>3)&0x3)<<10;
                 n_cmd|=((offset>>8)&0x1)<<12;
                 /*c.beqz*/
@@ -769,12 +771,15 @@ void handle_unsure(cmd_info_t * cmd_info){
                 cmd_info[i].cmd = n_cmd;
             }
             else{
+                /*set imm5 and imm7*/
                 uint32_t imm5=0;
                 uint32_t imm7=0;
+                /*get imm5 and imm7*/
                 imm5 |= ((offset>>11)&0x1);
                 imm5 |=((offset>>1)&0xf)<<1;
                 imm7 |=((offset>>5)&0x3f);
                 imm7 |=(((offset>>12)&0x1)<<6);
+                /*get n_cmd*/
                 cmd_info[i].cmd&=0x01fff07f;
                 cmd_info[i].cmd|=((imm7<<25)|(imm5<<7));
             }
