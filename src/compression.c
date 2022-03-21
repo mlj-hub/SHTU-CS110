@@ -860,15 +860,18 @@ void handle_unsure(cmd_info_t * cmd_info){
                 uint32_t imm5=0;
                 uint32_t imm7=0;
                 /*get imm5 and imm7*/
+                printf("0x%x\n",offset);
                 imm5 |= ((offset>>11)&0x1);
                 imm5 |=((offset>>1)&0xf)<<1;
+                printf("0x%x\n",imm5);
                 imm7 |=((offset>>5)&0x3f);
                 imm7 |=(((offset>>12)&0x1)<<6);
+                printf("0x%x\n",imm7);
                 /*get n_cmd*/
                 cmd_info[i].cmd&=0x01fff07f;
                 /*get n_cmd*/
                 cmd_info[i].cmd|=(imm5<<7);
-                cmd_info[i].cmd|=(imm7>>25);
+                cmd_info[i].cmd|=(imm7<<25);
             }
         }
     }
