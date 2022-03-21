@@ -578,12 +578,12 @@ void S_check(cmd_info_t * cmd_info){
 void SB_check(cmd_info_t * cmd_info){
     /*get parameters*/
     uint32_t cmd = cmd_info->cmd;
-    uint32_t funct3 = (cmd>>12)&REGISTER;
+    uint32_t funct3 = (cmd>>12)&0x7;
     /*get register*/
     uint32_t rs1 = (cmd>>15)&REGISTER;
     uint32_t rs2 = (cmd>>20)&REGISTER;
     /*funct3 larger than 2, incompressible*/
-    if(funct3 >=2){
+    if(funct3 !=1 && funct3 !=0){
         cmd_info->state = B_J_INCOMPRESSIBLE;
         cmd_info->c_format = NONE;
     }
@@ -847,7 +847,7 @@ void handle_unsure(cmd_info_t * cmd_info){
                 n_cmd|=((offset>>3)&0x3)<<10;
                 n_cmd|=((offset>>8)&0x1)<<12;
                 /*c.beqz*/
-                if(!funct3)
+                if(funct3==0)
                     n_cmd |=(0x6<<13);
                 /*c.bnez*/
                 else
