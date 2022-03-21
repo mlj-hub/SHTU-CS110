@@ -701,17 +701,17 @@ void handle_unsure(cmd_info_t * cmd_info){
                 /*set n_offset*/
                 uint32_t n_offset=0;
                 /*offset 19:12*/
-                n_offset |=((offset&0xff000));
+                n_offset |=(((offset>>12)&0xff));
                 /*offset 11*/
-                n_offset |=((offset&0x800)<<9);
+                n_offset |=(((offset>>11)&0x1)<<8);
                 /*offset 10:1*/
-                n_offset |=((offset&0x7fe)<<20);
+                n_offset |=(((offset>>1)&0x3ff)<<9);
                 /*offset 20*/
-                n_offset |=((offset&0x80000)<<11);
+                n_offset |=(((offset>>20)&0x1)<<19);
                 /*clear old offset*/
                 cmd_info[i].cmd&=0xfff;
                 /*set new offset*/
-                cmd_info[i].cmd|=n_offset;
+                cmd_info[i].cmd|=(n_offset<<12);
             }
         }
         /*c.beqz and c.bnez*/
