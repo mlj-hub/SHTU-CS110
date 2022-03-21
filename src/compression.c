@@ -417,7 +417,8 @@ void I_check(cmd_info_t * cmd_info){
         /*andi*/
         case 0x7:
             /*c.andi rd=rs1, -32<=imm12<=31*/
-            if(rd==rs1 && -32<=imm12 && imm12<=31 && rd>=8 && rd<=15){
+            /*if(rd==rs1 && -32<=imm12 && imm12<=31 && rd>=8 && rd<=15){*/
+            if(rd==rs1 &&  rd>=8 && rd<=15){
                 /*conditions when compressible*/
                 cmd_info->state = COMPRESSIBLE;
                 cmd_info->c_format = CB_T2;
