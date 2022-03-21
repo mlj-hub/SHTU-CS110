@@ -228,11 +228,15 @@ void CI_compress(cmd_info_t *cmd_info)
             CI_OP = 1;
             /*c.li*/
             if (Old_rs1 == 0)
-                /* the commmand is [c.li]*/
+            {
                 CI_funct3 = 2;
+            }
+                /* the commmand is [c.li]*/
             else
-                /* the command is [c.slli]*/
+            {
                 CI_funct3 = 0;
+            }
+                /* the command is [c.addi]*/
         }
         else
         {
@@ -333,7 +337,7 @@ void R_check(cmd_info_t * cmd_info){
             }
             /*c.sub*/
             else{
-                if(rd==rs1 && rd>=8 && rd<=15){
+                if(rd==rs1 && rd>=8 && rd<=15 &&rs2 >=8 && rs2<=15){
                     /*conditions if compressible*/
                     cmd_info->state = COMPRESSIBLE;
                     cmd_info->c_format = CS_T2;
@@ -349,7 +353,7 @@ void R_check(cmd_info_t * cmd_info){
         case 0x6:
         case 0x7:
             /*compressible only when rd is same with rs1*/
-            if(rd==rs1 && rd<=15 && rd>=8){
+            if(rd==rs1 && rd<=15 && rd>=8 &&rs2 >=8 && rs2<=15){
                 cmd_info -> state = COMPRESSIBLE;
                 cmd_info -> c_format = CS_T2;
                 /*return */
