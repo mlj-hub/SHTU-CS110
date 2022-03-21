@@ -68,7 +68,7 @@ void CR_compress(cmd_info_t * cmd_info){
         }
     }
     /*change the 32-bit code in the cmd_info*/
-    cmd_info->cmd = CR_op + (CR_rs2<<2) + (CR_rdORrs1<<7)+(CR_funct4<<12);
+    cmd_info->cmd = CR_op | (CR_rs2<<2) | (CR_rdORrs1<<7)|(CR_funct4<<12);
     return;
 
 }
@@ -105,11 +105,11 @@ void CS_compress(cmd_info_t * cmd_info)
         /*get the offset[5:3] of given imm*/
         CS_T1_IMM3 = (Old_imm12 >> 3) & 0x7;
         /*get the offset[2|6] of given imm*/
-        CS_T1_IMM2 += (((Old_imm12 >> 2) & 0x1) <<1) ;
-        CS_T1_IMM2 += ((Old_imm12 >> 6) & 0x1);
+        CS_T1_IMM2 |= (((Old_imm12 >> 2) & 0x1) <<1) ;
+        CS_T1_IMM2 |= ((Old_imm12 >> 6) & 0x1);
         /* change the cmd*/
-        cmd_info->cmd = (CS_T1_OP) + (CS_T1_RS2 << 2) + (CS_T1_IMM2 << 5) + \
-                        (CS_T1_RS1<<7) + (CS_T1_IMM3 << 10) + (CS_T1_funct3<< 13);
+        cmd_info->cmd = (CS_T1_OP) | (CS_T1_RS2 << 2) | (CS_T1_IMM2 << 5) | \
+                        (CS_T1_RS1<<7) | (CS_T1_IMM3 << 10) | (CS_T1_funct3<< 13);
         return;
 
     }
@@ -169,7 +169,7 @@ void CL_compress(cmd_info_t *cmd_info)
     /* the parameter of I*/
     uint32_t Old_rd = (cmd_info->cmd>>7)&REGISTER;
     uint32_t Old_rs1 = (cmd_info->cmd>>15)&REGISTER;
-    int32_t  Old_imm12 = (cmd_info->cmd>>20)&IMM12;
+    int32_t  Old_imm12 = (((int32_t)cmd_info->cmd)>>20)&IMM12;
     /* the parameter of CL*/
     uint32_t CL_funct3 = 2;
     uint32_t CL_IMM3 = (Old_imm12>>3) & 0x7;
@@ -180,9 +180,9 @@ void CL_compress(cmd_info_t *cmd_info)
     uint32_t CL_RD= Old_rd - 8;
     uint32_t CL_OP = 0;
     /*get imm according to the green card*/
-    CL_IMM2 += (((Old_imm12 >> 2) & 0x1) <<1) ;
-    CL_IMM2 += ((Old_imm12 >> 6) & 0x1);
-    cmd_info->cmd = CL_OP + (CL_RD << 2) + (CL_IMM2<<5) +(CL_RS1 << 7) + (CL_IMM3 << 10) + (CL_funct3 << 13);
+    CL_IMM2 |= (((Old_imm12 >> 2) & 0x1) <<1) ;
+    CL_IMM2 |= ((Old_imm12 >> 6) & 0x1);
+    cmd_info->cmd = CL_OP | (CL_RD << 2) | (CL_IMM2<<5) |(CL_RS1 << 7) | (CL_IMM3 << 10) | (CL_funct3 << 13);
 }
 /*check add,and,or,xor,sub*/  /*right*/
 void CI_compress(cmd_info_t *cmd_info)
@@ -248,7 +248,7 @@ void CI_compress(cmd_info_t *cmd_info)
         }
     }
     /*changt the value of the command*/
-    cmd_info->cmd = CI_OP + (CI_IMM5 <<2) + (CI_RS1orRD << 7) +(CI_IMM1<<12) + (CI_funct3 << 13);
+    cmd_info->cmd = CI_OP | (CI_IMM5 <<2) | (CI_RS1orRD << 7)|(CI_IMM1<<12) | (CI_funct3 << 13);
     return;
 
 }
@@ -305,7 +305,7 @@ void CB_T2_Compress(cmd_info_t *cmd_info)
             CB_T2_IMM5 = Old_imm12 & IMM5;
         /*the RISCV16 cmd is [c.andi]*/
     }
-    cmd_info->cmd = CB_T2_OP + (CB_T2_IMM5<<2) + (CB_T2_RS1orRD << 7) +(CB_T2_funct2<< 10) + (CB_T2_IMM1<<12)+(CB_T2_funct3 << 13);
+    cmd_info->cmd = CB_T2_OP | (CB_T2_IMM5<<2) | (CB_T2_RS1orRD << 7) |(CB_T2_funct2<< 10) | (CB_T2_IMM1<<12)|(CB_T2_funct3 << 13);
 }
 /*R_Check*/ /*right*/
 void R_check(cmd_info_t * cmd_info){
