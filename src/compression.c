@@ -561,17 +561,10 @@ void U_check(cmd_info_t * cmd_info){
     uint32_t cmd = cmd_info -> cmd;
     uint32_t rd = (cmd >>7)&REGISTER;
     /*get imm20*/
-    int32_t imm20 = cmd&0xfffff000;
-    /*highest bits are all one and 17 bit is 1*/
-    if((imm20&0xfffc0000) == 0xfffc0000 && (imm20&0x00020000)!=0 && rd!=0 && rd!=2 && imm20){
-        /*set c_format*/
-        cmd_info->c_format = CI;
-        /*compressible*/
-        cmd_info->state = COMPRESSIBLE;
-        return;
-    }
-    /*highest bits are all 0 and 17 bit is 0*/
-    else if((imm20&0xfffc0000) == 0 && (imm20&0x00020000)==0 && rd!=0 && rd!=2 && imm20){
+    /*int32_t imm20 = cmd&0xfffff000;*/
+    int32_t imm20 = (((int32_t)cmd)>>12)&&SIGN_ALL;
+
+    if(imm20 && rd!=0 && rd!=2 && imm20<=31 &&imm20>=-32){
         /*set c_format*/
         cmd_info->c_format = CI;
         /*compressible*/
