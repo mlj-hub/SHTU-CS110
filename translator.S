@@ -137,7 +137,7 @@ cadd_decompress:
     andi t2 t2 0x1f
     #right move t0 7 bit and store its value in t1
     srli t1 t0 7
-    #get the lowest 5 bit of t1 to have rs1 and store it in t1
+    #get the lowest 5 bit of t1 to have rs1ORrd and store it in t1
     andi t1 t1 0x1f
     #suppose t3 is the value to put back to a4,add opcode to t3
     addi t3 t3 0x33
@@ -151,7 +151,7 @@ cadd_decompress:
     slli t1 t1 8
     #add t1 to t3 to give rs1 value to final cmd
     add t3 t3 t1
-    #left move t2 20 bit get it value to get the rs2 value of the cmd in 32bit
+    #left move t2 20 bit,get it value to get the rs2 value of the cmd in 32bit
     slli t2 t2 20
     #add t2 to t3 to give rs2 value to final cmd
     add t3 t3 t2
@@ -162,8 +162,45 @@ cadd_decompress:
     #return 
     jr ra
 
-    
-
+cmv_decompress:
+    #reset the temp value  to zero
+    li t0 0
+    li t1 0
+    li t2 0
+    li t3 0
+    li t4 0
+    li t5 0
+    li t6 0
+    # load the cmd from array pointer
+    lw t0, 0(a4)
+    #right move t0 2 bit and store its value in t2
+    srli t2 t0 2
+    #get the lowest 5 bit of t2 to have rs2 and store it in t2
+    andi t2 t2 0x1f
+    #right move t0 7 bit and store its value in t1
+    srli t1 t0 7
+    #get the lowest 5 bit of t1 to have rs1ORrd and store it in t1
+    andi t1 t1 0x1f
+    #suppose t3 is the value to put back to a4,add opcode to t3
+    addi t3 t3 0x33
+    #left move t1 7 bit to get it value to get the rd of the cmd in 32bit
+    slli t1 t1 7
+    #add t1 to t3 to give rd value to final cmd
+    add t3 t3 t1
+    #add func3 value to t3,since the func3 of add is zero so we add zero
+    addi t3 t3 0
+    #add rs1 value to t3,since rs1 is x0 ,so we add zero
+    addi t3 t3 0
+    #left move t2 20 bit, get it value to get the rs2 value of the cmd in 32bit
+    slli t2 t2 20
+    #add t2 to t3 to give rs2 value to final cmd
+    add t3 t3 t2
+    #add func7 to t3,since func7 of add is zero,so we add zero to t3
+    addi t3 t3 0
+    #store the value of t3 to the register
+    sw t3 0(a4)
+    #return 
+    jr ra
 
 
 #==================================================================#
