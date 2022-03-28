@@ -162,6 +162,250 @@ return_check_type:
     addi   a0, x0, 17 
     ecall
 
+# check opcode 00
+check_00:
+    # right shift the cmd by 15bits to get the highest bit
+    srli t2,t1, 15
+    # /if the highest bit is 0, the cmd is clw
+    beqz t2,clw
+    # /else, the cmd is csw, call csw_decompress
+    csw: jal csw_decompress
+    # continue
+    j continue_check
+    # call clw decompress
+    clw: jal clw_decompress
+    # continue 
+    j continue_check
+
+# check opcode 01
+check_01:
+    # right shift the cmd by 13 to get the highest thress bits into t2
+    srli t2,t1,13
+    # get 0x1 into s1 for type check
+    li s1,0x1
+    # get 0x2 into s2 for type check
+    li s2,0x2
+    # get 0x3 into s3 for type check
+    li s3,0x3
+    # get 0x5 into s5 for type check
+    li s5,0x5
+    # get 0x6 into s6 for type check
+    li s6,0x6
+    # get 0x7 into s7 for type check
+    li s7,0x7
+    # get 0x8 into s8 for type check
+    li s8,0x8
+    # /if funct3 is 000, the cmd is caddi
+    beqz t2,caddi
+    # /if funct3 is 001, the cmd is cjal
+    beq t2,s1,cjal
+    # /if funct3 is 010, the cmd is cli
+    beq t2,s2,cli
+    # /if funct3 is 011, the cmd is clui
+    beq t2,s3,clui
+    # /if funct3 is 101, the cmd is cj
+    beq t2,s5,cj
+    # /if funct3 is 110, the cmd is cbeqz
+    beq t2,s6,cbeqz
+    # /if funct3 is 111, the cmd is cbnez
+    beq t2,s7,cbnez
+    # /else, continue checking 
+    # right shift the cmd by 10 bits to get the highest 6 bits into t2
+    srli t2,t1,10
+    # and t2 by 0x3 to get the lowese two bits 
+    andi t2,t2,0x3
+    # /if funct2 is 00, the cmd is csrli
+    beqz t2,csrli
+    # /if funct2 is 01, the cmd is csrai
+    beq t2,s1,csrai
+    # /if funct2 is 10, the cmd is candi
+    beq t2,s2,candi
+    # /else, continue checking
+    # get the 6th to 5th bits into t2
+    andi t2,t1,0x60
+    # right shift t2 by 5 bits to get funct2
+    srli t2,t2,5
+    # /if funct2 is 00, the cmd is csub
+    beqz t2, csub
+    # /if funct2 is 01, the cmd is cxor
+    beq t2,s1, cxor
+    # /if funct2 is 10, the cmd is cor
+    beq t2,s2, cor
+    # /if funct2 is 11, the cmd is cand
+    beq t2,s3,cand
+    # /else, finish 01 check, just continue
+    j continue_check
+# below are codes for calling decompress functions
+    # call caddi decompress
+    caddi: jal caddi_decompress
+    # after decompress, continue
+    j continue_check
+
+    # handle cjal
+    cjal: 
+    # set 3 to t2
+    li t2,3
+    # store t2(3) into state array
+    sw t2,0(a3)
+    # call cjal decompress
+    jal cjal_decompress
+    # after decompress, continue
+    j continue_check
+
+    # call cli decompress
+    cli: jal cli_decompress
+    # after decompress, continue
+    j continue_check
+
+    # call clui decompress
+    clui: jal clui_decompress
+    # after decompress, continue
+    j continue_check
+
+    # handle cj 
+    cj: 
+    # set 3 to t2
+    li t2,3
+    # store t2(3) into state array
+    sw t2,0(a3)
+    # call cj decompress
+    jal cj_decompress
+    # after decompress, continue
+    j continue_check
+
+    # handle cbeqz
+    cbeqz: 
+    # set 3 to t2
+    li t2,3
+    # store t2(3) into state array
+    sw t2,0(a3)
+    # call cbeqz decompress
+    jal cbeqz_decompress
+    # after decompress, continue
+    j continue_check
+
+    # handle cbnez
+    cbnez: 
+    # set 3 to t2
+    li t2,3
+    # store t2(3) into state array
+    sw t2,0(a3)
+    # call cbnez decompress
+    jal cbnez_decompress
+    # after decompress, continue
+    j continue_check
+
+    # call cand decompress
+    cand: jal cand_decompress
+    # after decompress, continue
+    j continue_check
+
+    # call cor decompress
+    cor: jal cor_decompress
+    # after decompress, continue
+    j continue_check
+
+    # call xor decompress
+    cxor: jal cxor_decompress
+    # after decompress, continue
+    j continue_check
+
+    # call csub decompress
+    csub: jal csub_decompress
+    # after decompress, continue
+    j continue_check
+
+    # call csrli decompress
+    csrli: jal csrli_decompress
+    # after decompress, continue
+    j continue_check
+
+    # call csrai decompress
+    csrai: jal csrai_decompress
+    # after decompress, continue
+    j continue_check
+
+    # call candi decompress
+    candi: jal candi_decompress
+    # after decompress, continue
+    j continue_check
+
+# check opcode 10
+check_10:
+    # right shift the cmd by 15 to get the highest bit into t2
+    srli t2,t1,15
+    # /if the highest bit of the cmd is 0, the cmd is cslli
+    beqz t2,cslli
+    # get rs2 of the cmd into t2
+    andi t2,t1,0x7c
+    # /if rs2 is 0, the cmd is cjalr or cjr
+    beqz t2,cjr_or_cjalr
+    # /else , the cmd is cmv or cadd
+    j cadd_or_cmv
+    # check cjr and cjalr
+    cjr_or_cjalr:
+        # right shift the cmd by 12 to get the highest byte
+        srli t2,t1,12
+        # and t2 with 0x1 to get the lowest bit
+        andi t2,t1,0x1
+        # /if 13rd bit is 0, the cmd is cjr
+        beqz t2,cjr
+        # /else, the cmd is cjalr, call cjalr decompress
+        cjalr: jal cjalr_decompress
+        # continue
+        j continue_check
+        # call cjr decompress
+        cjr: jal cjr_decompress
+        # continue
+        j continue_check
+    # check cadd and cmv
+    cadd_or_cmv:
+        # right shift the cmd by 12 to get the highest byte
+        srli t2,t1,12
+        # and t2 with 0x1 to get the lowest bit
+        andi t2,t1,0x1
+        # /if 13rd bit is 0, the cmd is cmv
+        beqz t2,cmv
+        # /else, the cmd is cadd, call cadd decompress
+        cadd: jal cadd_decompress
+        j continue_check
+        # call cmv decompress
+        cmv: jal cmv_decompress
+        j continue_check
+    # /if the rs2 is 0, the cmd is cjr or cjalr
+    cslli: jal cslli_decompress
+    j continue_check
+
+# check 32bits cmd to find if it is jump or branch
+b_j_check_32:
+    # load opcode into t2
+    andi t2,t1,0x7f
+    # load jump opcode into t3
+    li t3,0x6f
+    # load branch opcode into t4
+    li t4,0x63
+    # /if the cmd is jump, set the state array to 2
+    beq t2,t3,32_j_b_state_set
+    # /if the cmd is branch, set the state array to 2
+    beq t2,t4,32_j_b_state_set
+    # /else, leave the state array unchanged, which is 0
+    j continue_check
+    32_j_b_state_set:
+        # load 2 (32 jump or branch state) into t3
+        li t3,2
+        # change the state array
+        sw t3,0(a3)
+        # continue
+        j continue_check
+
+
+# continue for check
+continue_check:
+    # i++
+    addi t0,t0,1
+    # continue loop
+    j check_type
+
 #==================================================================#
 #codes below are some helpful functions
 
@@ -192,7 +436,7 @@ print_ints:
     sw ra,0(sp)
     # print variables in a loop
     print_loop:
-        # if print all variables, return
+        # /if print all variables, return
         beqz a3,return_print_ints
         # decrease the length by one
         addi a3,a3,-1
