@@ -13,11 +13,11 @@ In this part, there are three steps: **check type** , **de_compress** and **chan
 
 ### check_type
 * In this part, we need to check all cmds and change the value in **state array** to remark them:
-  * 1: 32bits command which is not jump or branch  
-  * 2: 16bits command which is not jump or branch
-  * 3: 32bits command which is jump or branch
-  * 4: 16bits command which is jump or branch
-* The main function is check_type. This function will handle the check loop and call check functions according to opcode. For 32bits cmds, just check whether it is jump or branch and change the **state array**. For 16bits cmds, call the following functions(in these functions, **state array** will be changed):
+  * 0: 32bits command which is not jump or branch  
+  * 1: 16bits command which is not jump or branch
+  * 2: 32bits command which is jump or branch
+  * 3: 16bits command which is jump or branch
+* The main function is check_type. This function will handle the check loop and call check functions according to opcode. For 32bits cmds, just check whether it is jump or branch and change the **state array**, whic will use **j_b_check_32**. For 16bits cmds, call the following functions(in these functions, **state array** will be changed):
   * check_00: for those cmds whose opcode is 00
   * check_10: for those cmds whose opcode is 10
   * check_01: for those cmds whose opcode is 01
