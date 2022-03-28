@@ -40,16 +40,16 @@ input_handler:
     addi sp,sp,-12
     # store the line num 
     sw a1,8(sp)
-    # store the flag pointer
+    # store the state array pointer
     sw a3,4(sp)
-    # store the data pointer
+    # store the data array pointer
     sw a2,0(sp)
     # move line_num from a1 into t4
     mv t4,a1
     # load adress of input data to a1
     la a1,rvc_codes 
 read_in:
-    # if already read in all commands, return
+    # /if already read in all commands, return
     beqz t4,return_read_in
     # minus t4 by one to indicate that read in one cmd
     addi t4,t4,-1
@@ -60,7 +60,7 @@ read_in:
     andi t1,t0,3
     # load 3 into t2 for feather usage
     li t2,3
-    # if t1 and t2 is equal, it is 32 bits,branch to 32_bits_cmd
+    # /if t1 and t2 is equal, it is 32 bits,branch to 32_bits_cmd
     beq t1,t2,32_bits_cmd
 16_bits_cmd:
 	# left shift cmd by 16 bits to clear the sign bits
@@ -71,7 +71,7 @@ read_in:
     sw t0,0(a2)
     # store 1 into t3 for flag
     li t3, 1
-    # store flag: 1 for 16 bits
+    # store state: 1 for 16 bits
     sw t3,0(a3)
     # move a2(data pointer) one word forward
     addi a2,a2,4
@@ -88,11 +88,11 @@ read_in:
     sw t0, 0(a2)
     # store 1 into t3 for flag
     li t3, 0
-    # store flag: 1 for 16 bits
+    # store state: 1 for 16 bits
     sw t3,0(a3)
     # move a2(data pointer) one word forward
     addi a2,a2,4
-    # move a3(flag pointer) one word forward
+    # move a3(state pointer) one word forward
     addi a3,a3,4
     # move a1(input pointer) one word forward
     addi a1,a1,4
@@ -101,7 +101,7 @@ read_in:
 return_read_in:
     # load back the line num
     lw a1,8(sp)
-    # load back the flag pointer
+    # load back the state pointer
     lw a3,4(sp)
     # load back the data pointer
     lw a2,0(sp)
@@ -110,8 +110,53 @@ return_read_in:
 # codes above is used to handle input data
 # =================================================================#
 
-check_loop:
 
+de_compress:
+    # let t0 be i and initialize it to zero
+    li t0,0
+    # get three words in the stack
+    addi sp,sp,-12
+    # store len num
+    sw a1,8(sp)
+    # store data array
+    sw a2,4(sp)
+    # store state array
+    sw a3,0(sp)
+# in this function, loop through all cmds to check their types and de-compress them
+check_type:
+    # /if i== len num , return
+    beq t0,a1,return_check_type
+    # move state array one word forward
+    addi a3,a3,4
+    # move data array one word forward
+    addi a2,a2,4
+    # load cmd state into s2
+    lw s2,0(a3)
+    # get the address of cmd into a4
+    mv a4,a2
+    # load cmd into t1
+    lw t1,0(a4)
+    # cmd is 32bits, check whether if it is jump or branch
+    beqz s2,b_j_check_32
+    # get opcode into t2
+    andi t2,t1,0x03
+    # load 1 into t3 for opcode check
+    li t3,1
+    # check 00
+    beq t2,zero,check_00
+    # check 01
+    beq t2,t3,check_01
+    # check 10
+    j check_10
+return_check_type:
+    # load back len num
+    lw a1,8(sp)
+    # load back data array
+    lw a2,4(sp)
+    # load back state array
+    lw a3,0(sp)
+    # reset stack
+    addi sp,sp,12
     # Exit with error code 0
     add	   a1, x0, x0
     addi   a0, x0, 17 
@@ -140,7 +185,7 @@ print_char:
 
 # this function is used to print all int variables whose head is in a2 with length in a3
 # after each number, there is a new line
-prints:
+print_ints:
     # move sp one word below
     addi sp,sp,-4
     # store the return register
@@ -148,7 +193,7 @@ prints:
     # print variables in a loop
     print_loop:
         # if print all variables, return
-        beqz a3,return_prints
+        beqz a3,return_print_ints
         # decrease the length by one
         addi a3,a3,-1
         # load the variable which is need printing into a1
@@ -163,10 +208,12 @@ prints:
         addi a2,a2,4
         # continue
         j print_loop
-return_prints:
+return_print_ints:
     # get the return adress from stack
     lw ra,0(sp)
     # reset sp
     addi sp,sp,4
     # return 
     jr ra
+# codes above are some helpful functions
+# ==================================================================#
