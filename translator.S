@@ -497,6 +497,86 @@ cmv_decompress:
     sw t3 0(a4)
     #return 
     jr ra
+cjr_decompress:
+    #reset the temp value  to zero
+    li t0 0
+    li t1 0
+    li t2 0
+    li t3 0
+    li t4 0
+    li t5 0
+    li t6 0
+    #load the word from the array pointer
+    lw t0 0(a4)
+    #add opcode  1100111 0x67 to the decompress cmd t3
+    addi t3 t3 0x67
+    #right move 7 bit to get the rs1ORrd of cmd
+    srli t1 t0 7
+    #use andi to get the last 5 bit of t1 to have rs1ORrd of cmd 
+    andi t1 t1 0x1f
+    #add rd to decompress cmd t3,since rd should be 0,we add 0
+    addi t3 t3 0
+    #add func3 to decompress cmd t3,since func3 should be 0,we add 0
+    addi t3 t3 0
+    #left move 15 bit to add the rs1 value to the decompress cmd
+    slli t1 t1 15
+    #add rs1 value to decompress cmd t3
+    add t3 t3 t1 
+    #add imm value to t3,since imm is zero,so we add zero
+    addi t3 t3 0
+    #store the decompress cmd to the address in a4 
+    sw t3 0(a4)
+    #return 
+    jr ra
+cjalr_decompress:
+    #reset the temp value  to zero
+    li t0 0
+    li t1 0
+    li t2 0
+    li t3 0
+    li t4 0
+    li t5 0
+    li t6 0
+    #load the word from the array pointer
+    lw t0 0(a4)
+    #add opcode  1100111 0x67 to the decompress cmd t3
+    addi t3 t3 0x67
+    #right move 7 bit to get the rs1ORrd of cmd
+    srli t1 t0 7
+    #use andi to get the last 5 bit of t1 to have rs1ORrd of cmd 
+    andi t1 t1 0x1f
+    #give value 1  to t2 since the rd value of jalr is 1
+    li t2 1
+    #left move t2 7 bit to add the value of rd to the decompress cmd
+    slli t2 t2 7
+    #add rd to decompress cmd t3
+    addi t3 t3 t2
+    #add func3 to decompress cmd t3,since func3 should be 0,we add 0
+    addi t3 t3 0
+    #left move 10 bit to add the rs1 value to the decompress cmd
+    slli t1 t1 15
+    #add rs1 value to decompress cmd t3
+    add t3 t3 t1 
+    #add imm value to t3,since imm is zero,so we add zero
+    addi t3 t3 0
+    #store the decompress cmd to the address in a4 
+    sw t3 0(a4)
+    #return 
+    jr ra
+cli_decompress:
+    #reset the temp value  to zero
+    li t0 0
+    li t1 0
+    li t2 0
+    li t3 0
+    li t4 0
+    li t5 0
+    li t6 0
+    #load value to t0 from the address of a4
+    lw t0 0(a4)
+    #return 
+    jr ra
+
 # codes above is used to decompress the data in a4
 # ===================================================================================== #
 
