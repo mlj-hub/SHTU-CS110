@@ -33,11 +33,23 @@ main:
     # load back line_num into a1
     lw a1,lines_of_rvc_codes
 
+    # handle input
+    jal input_handler
+    # handle output
+    jal output_handler
+    
+    # Exit with error code 0
+    add	   a1, x0, x0
+    addi   a0, x0, 17 
+    ecall
+
 # ================================================================#
 # codes below is used to handle input
 input_handler:
     # move the stack three words below
-    addi sp,sp,-12
+    addi sp,sp,-16
+    # store the return address
+    sw ra,12(sp)
     # store the line num 
     sw a1,8(sp)
     # store the state array pointer
@@ -48,57 +60,59 @@ input_handler:
     mv t4,a1
     # load adress of input data to a1
     la a1,rvc_codes 
-read_in:
-    # /if already read in all commands, return
-    beqz t4,return_read_in
-    # minus t4 by one to indicate that read in one cmd
-    addi t4,t4,-1
-    # load half word into t0
-    lh t0,0(a1)
-# check if the cmd is 16 bits
-    # get the rightest two bits of t0 and store it to t1
-    andi t1,t0,3
-    # load 3 into t2 for feather usage
-    li t2,3
-    # /if t1 and t2 is equal, it is 32 bits,branch to 32_bits_cmd
-    beq t1,t2,32_bits_cmd
-16_bits_cmd:
-	# left shift cmd by 16 bits to clear the sign bits
-    slli t0,t0,16
-	# right shift cmd by 16 bits to make the sign bits all zero
-    srli t0,t0,16
-    # store cmd into a2
-    sw t0,0(a2)
-    # store 1 into t3 for flag
-    li t3, 1
-    # store state: 1 for 16 bits
-    sw t3,0(a3)
-    # move a2(data pointer) one word forward
-    addi a2,a2,4
-    # move a3(flag pointer) one word forward
-    addi a3,a3,4
-    # move a1(input pointer) half word forward
-    addi a1,a1,2
-    # continue loop
-    j read_in
-32_bits_cmd:
-    # load word into t0
-    lw t0, 0(a1)
-    # store cmd into a2(data pointer)
-    sw t0, 0(a2)
-    # store 1 into t3 for flag
-    li t3, 0
-    # store state: 1 for 16 bits
-    sw t3,0(a3)
-    # move a2(data pointer) one word forward
-    addi a2,a2,4
-    # move a3(state pointer) one word forward
-    addi a3,a3,4
-    # move a1(input pointer) one word forward
-    addi a1,a1,4
-    # continue loop
-    j read_in
-return_read_in:
+    loop_read_in:
+        # /if already read in all commands, return
+        beqz t4,return_input_handler
+        # minus t4 by one to indicate that read in one cmd
+        addi t4,t4,-1
+        # load half word into t0
+        lh t0,0(a1)
+    # check if the cmd is 16 bits
+        # get the rightest two bits of t0 and store it to t1
+        andi t1,t0,3
+        # load 3 into t2 for feather usage
+        li t2,3
+        # /if t1 and t2 is equal, it is 32 bits,branch to 32_bits_cmd
+        beq t1,t2,32_bits_cmd
+        16_bits_cmd:
+            # left shift cmd by 16 bits to clear the sign bits
+            slli t0,t0,16
+            # right shift cmd by 16 bits to make the sign bits all zero
+            srli t0,t0,16
+            # store cmd into a2
+            sw t0,0(a2)
+            # store 1 into t3 for flag
+            li t3, 1
+            # store state: 1 for 16 bits
+            sw t3,0(a3)
+            # move a2(data pointer) one word forward
+            addi a2,a2,4
+            # move a3(flag pointer) one word forward
+            addi a3,a3,4
+            # move a1(input pointer) half word forward
+            addi a1,a1,2
+            # continue loop
+            j loop_read_in
+        32_bits_cmd:
+            # load word into t0
+            lw t0, 0(a1)
+            # store cmd into a2(data pointer)
+            sw t0, 0(a2)
+            # store 1 into t3 for flag
+            li t3, 0
+            # store state: 1 for 16 bits
+            sw t3,0(a3)
+            # move a2(data pointer) one word forward
+            addi a2,a2,4
+            # move a3(state pointer) one word forward
+            addi a3,a3,4
+            # move a1(input pointer) one word forward
+            addi a1,a1,4
+            # continue loop
+            j loop_read_in
+return_input_handler:
+    # load return address
+    lw ra,12(sp)
     # load back the line num
     lw a1,8(sp)
     # load back the state pointer
@@ -106,7 +120,8 @@ return_read_in:
     # load back the data pointer
     lw a2,0(sp)
     # reset sp
-    addi sp,sp,12
+    addi sp,sp,16
+    jr ra
 # codes above is used to handle input data
 # =================================================================#
 
@@ -161,10 +176,7 @@ return_check_type:
     lw a3,0(sp)
     # reset stack
     addi sp,sp,12
-    # Exit with error code 0
-    add	   a1, x0, x0
-    addi   a0, x0, 17 
-    ecall
+
 
 # check opcode 00
 check_00:
@@ -578,6 +590,82 @@ cli_decompress:
     jr ra
 
 # codes above is used to decompress the data in a4
+# ===================================================================================== #
+
+# ===================================================================================== #
+# codes below are for output handler
+output_handler:
+    # get 4 words in the stack
+    addi sp,sp,-16
+    # store return address
+    sw ra,0(sp)
+    # store the state array
+    sw a3,4(sp)
+    # store data array
+    sw a2,8(sp)
+    # store the num line
+    sw a1,12(sp)
+    # get i into t0
+    li t0,0
+    # move line num from a1 into t1
+    mv t1,a1
+    loop_output_cmd:
+        # load 0x80000000 into t3 as a signal
+        lui t3,0x80000
+        # /if i is equal to the line num, return 
+        beq t0,t1,return_output_cmd
+        # get cmd into t2
+        lw t2,0(a2)
+        loop_print_cmd:
+            # /if already print the cmd, return 
+            beqz t3,continue_output_cmd
+            # get (31-i)bit into t4
+            and t4,t2,t3
+            # /if t4 is 0, print zero
+            beqz t4,print_zero
+            # print one
+            print_one: li a1,1
+            # print 
+            jal print_int
+            # continue
+            j continue_print_cmd
+            # print zero
+            print_zero: li a1,0
+            # print
+            jal print_int
+            # continue
+            j continue_print_cmd
+
+continue_print_cmd:
+    # right shift the signal
+    srli t3,t3,1
+    # jump back the loop
+    j loop_print_cmd
+
+continue_output_cmd:
+    # i++
+    addi t0,t0,1
+    # move data array one word forward
+    addi a2,a2,4
+    # print a new line
+    jal print_newline
+    # jump back the loop
+    j loop_output_cmd
+
+return_output_cmd:
+    # store return address
+    lw ra,0(sp)
+    # store the state array
+    lw a3,4(sp)
+    # store data array
+    lw a2,8(sp)
+    # store the num line
+    lw a1,12(sp)
+    # reset the stack
+    addi sp,sp,16
+    # return 
+    jr ra
+# codes above are for output handler
 # ===================================================================================== #
 
 #==================================================================#
