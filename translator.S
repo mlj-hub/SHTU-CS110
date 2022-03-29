@@ -592,8 +592,10 @@ print_int:
     # return 
     jr ra
 
-# this function is used to print a chr variable in a1
-print_char:
+# this function is used to print a new line in a1
+print_newline:
+    # load a1 with '\n'
+    li a1,'\n'
     # ID for print char
     li a0,11
     # print
@@ -619,9 +621,7 @@ print_ints:
         # call print
         jal print_int
         # print a new line
-        li a1,'\n'
-        # call print
-        jal print_char
+        jal print_newline
         # move a2(data pointer) one word forward
         addi a2,a2,4
         # continue
