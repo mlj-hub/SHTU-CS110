@@ -10,21 +10,24 @@
 .import input.S
 
 .text
+# ================================================================================================================ #
+# codes below are the main function
+
 main:
-# load line_num to a1
+    # load line_num to a1
     lw a1,lines_of_rvc_codes
     # load 4 to t1 for feature usage
     li t1,4
     # mul len by 4 to get the size of total cmd and store it in a1
     mul a1,a1,t1
-# malloc for data:
+    # malloc for data:
     # assign ID 9 to a0
     li a0,9 
     # malloc a1 bytes and store the pointer to a0
     ecall
     # move the data pointer into a2 
     mv a2,a0
-# malloc for flag
+    # malloc for flag
     li a0,9
     # malloc a1 bytes and store the pointer to a0
     ecall
@@ -35,6 +38,8 @@ main:
 
     # handle input
     jal input_handler
+    # de compress
+    jal decompress
     # handle output
     jal output_handler
     
@@ -43,8 +48,12 @@ main:
     addi   a0, x0, 17 
     ecall
 
-# ================================================================#
+# codes above are the main function
+# ================================================================================================================ #
+
+# ================================================================================================================ #
 # codes below is used to handle input
+
 input_handler:
     # move the stack three words below
     addi sp,sp,-16
@@ -123,62 +132,63 @@ return_input_handler:
     addi sp,sp,16
     jr ra
 # codes above is used to handle input data
-# =================================================================#
+# ================================================================================================================ #
 
-# de_compress interface
+# ================================================================================================================ #
+# codes below are main funciton of de compressing
+
 de_compress:
-    # let t0 be i and initialize it to zero
-    li t0,0
     # get three words in the stack
-    addi sp,sp,-12
+    addi sp,sp,-16
+    # store return address
+    sw ra,12(sp)
     # store len num
     sw a1,8(sp)
     # store data array
     sw a2,4(sp)
     # store state array
     sw a3,0(sp)
+    # call check_type
+    jal check_type
+    # call change_offset
+    jal change_offset
+    # return 
+    j return_de_compress
+# codes above are main funciton of de compressing
+# ================================================================================================================ #
 
-# ====================================================================================== #
+# ================================================================================================================ #
 # codes below are main functions of check_type
 
-# check_type interface: loop through all cmds to check their types and de-compress them
 check_type:
-    # /if i== len num , return
-    beq t0,a1,return_check_type
-    # move state array one word forward
-    addi a3,a3,4
-    # move data array one word forward
-    addi a2,a2,4
-    # load cmd state into s2
-    lw s2,0(a3)
-    # get the address of cmd into a4
-    mv a4,a2
-    # load cmd into t1
-    lw t1,0(a4)
-    # cmd is 32bits, check whether if it is jump or branch
-    beqz s2,b_j_check_32
-    # get opcode into t2
-    andi t2,t1,0x03
-    # load 1 into t3 for opcode check
-    li t3,1
-    # check 00
-    beq t2,zero,check_00
-    # check 01
-    beq t2,t3,check_01
-    # check 10
-    j check_10
-return_check_type:
-    # load back len num
-    lw a1,8(sp)
-    # load back data array
-    lw a2,4(sp)
-    # load back state array
-    lw a3,0(sp)
-    # reset stack
-    addi sp,sp,12
+    # let t0 be i and initialize it to zero
+    li t0,0
+    loop_check_type:
+        # /if i== len num , return
+        beq t0,a1,return_check_type
+        # move state array one word forward
+        addi a3,a3,4
+        # move data array one word forward
+        addi a2,a2,4
+        # load cmd state into s2
+        lw s2,0(a3)
+        # get the address of cmd into a4
+        mv a4,a2
+        # load cmd into t1
+        lw t1,0(a4)
+        # cmd is 32bits, check whether if it is jump or branch
+        beqz s2,b_j_check_32
+        # get opcode into t2
+        andi t2,t1,0x03
+        # load 1 into t3 for opcode check
+        li t3,1
+        # check 00
+        beq t2,zero,check_00
+        # check 01
+        beq t2,t3,check_01
+        # check 10
+        j check_10
 
-
-# check opcode 00
 check_00:
     # right shift the cmd by 15bits to get the highest bit
     srli t2,t1, 15
@@ -187,13 +197,12 @@ check_00:
     # /else, the cmd is csw, call csw_decompress
     csw: jal csw_decompress
     # continue
-    j continue_check
+    j continue_check_type
     # call clw decompress
     clw: jal clw_decompress
     # continue 
-    j continue_check
+    j continue_check_type
 
-# check opcode 01
 check_01:
     # right shift the cmd by 13 to get the highest thress bits into t2
     srli t2,t1,13
@@ -250,12 +259,12 @@ check_01:
     # /if funct2 is 11, the cmd is cand
     beq t2,s3,cand
     # /else, finish 01 check, just continue
-    j continue_check
-# below are codes for calling decompress functions
+    j continue_check_type
+    # below are codes for calling decompress functions
     # call caddi decompress
     caddi: jal caddi_decompress
     # after decompress, continue
-    j continue_check
+    j continue_check_type
 
     # handle cjal
     cjal: 
@@ -266,17 +275,17 @@ check_01:
     # call cjal decompress
     jal cjal_decompress
     # after decompress, continue
-    j continue_check
+    j continue_check_type
 
     # call cli decompress
     cli: jal cli_decompress
     # after decompress, continue
-    j continue_check
+    j continue_check_type
 
     # call clui decompress
     clui: jal clui_decompress
     # after decompress, continue
-    j continue_check
+    j continue_check_type
 
     # handle cj 
     cj: 
@@ -287,7 +296,7 @@ check_01:
     # call cj decompress
     jal cj_decompress
     # after decompress, continue
-    j continue_check
+    j continue_check_type
 
     # handle cbeqz
     cbeqz: 
@@ -298,7 +307,7 @@ check_01:
     # call cbeqz decompress
     jal cbeqz_decompress
     # after decompress, continue
-    j continue_check
+    j continue_check_type
 
     # handle cbnez
     cbnez: 
@@ -309,44 +318,43 @@ check_01:
     # call cbnez decompress
     jal cbnez_decompress
     # after decompress, continue
-    j continue_check
+    j continue_check_type
 
     # call cand decompress
     cand: jal cand_decompress
     # after decompress, continue
-    j continue_check
+    j continue_check_type
 
     # call cor decompress
     cor: jal cor_decompress
     # after decompress, continue
-    j continue_check
+    j continue_check_type
 
     # call xor decompress
     cxor: jal cxor_decompress
     # after decompress, continue
-    j continue_check
+    j continue_check_type
 
     # call csub decompress
     csub: jal csub_decompress
     # after decompress, continue
-    j continue_check
+    j continue_check_type
 
     # call csrli decompress
     csrli: jal csrli_decompress
     # after decompress, continue
-    j continue_check
+    j continue_check_type
 
     # call csrai decompress
     csrai: jal csrai_decompress
     # after decompress, continue
-    j continue_check
+    j continue_check_type
 
     # call candi decompress
     candi: jal candi_decompress
     # after decompress, continue
-    j continue_check
+    j continue_check_type
 
-# check opcode 10
 check_10:
     # right shift the cmd by 15 to get the highest bit into t2
     srli t2,t1,15
@@ -369,11 +377,11 @@ check_10:
         # /else, the cmd is cjalr, call cjalr decompress
         cjalr: jal cjalr_decompress
         # continue
-        j continue_check
+        j continue_check_type
         # call cjr decompress
         cjr: jal cjr_decompress
         # continue
-        j continue_check
+        j continue_check_type
     # check cadd and cmv
     cadd_or_cmv:
         # right shift the cmd by 12 to get the highest byte
@@ -384,15 +392,14 @@ check_10:
         beqz t2,cmv
         # /else, the cmd is cadd, call cadd decompress
         cadd: jal cadd_decompress
-        j continue_check
+        j continue_check_type
         # call cmv decompress
         cmv: jal cmv_decompress
-        j continue_check
+        j continue_check_type
     # /if the rs2 is 0, the cmd is cjr or cjalr
     cslli: jal cslli_decompress
-    j continue_check
+    j continue_check_type
 
-# check 32bits cmd to find if it is jump or branch
 b_j_check_32:
     # load opcode into t2
     andi t2,t1,0x7f
@@ -405,29 +412,47 @@ b_j_check_32:
     # /if the cmd is branch, set the state array to 2
     beq t2,t4,32_j_b_state_set
     # /else, leave the state array unchanged, which is 0
-    j continue_check
+    j continue_check_type
     32_j_b_state_set:
         # load 2 (32 jump or branch state) into t3
         li t3,2
         # change the state array
         sw t3,0(a3)
         # continue
-        j continue_check
+        j continue_check_type
 
 
-# continue for check
-continue_check:
+continue_check_type:
     # i++
     addi t0,t0,1
     # continue loop
-    j check_type
+    j loop_check_type
+
+return_check_type:
+    # return 
+    jr ra
+
+return_de_compress:
+    # load back return address
+    lw ra,12(sp)
+    # load back len num
+    lw a1,8(sp)
+    # load back data array
+    lw a2,4(sp)
+    # load back state array
+    lw a3,0(sp)
+    # reset stack
+    addi sp,sp,16
+    jr ra
+
+
 
 # codes above are main functions of check_type
-# ============================================================================= #
+# ================================================================================================================ #
 
-# =================================================================#
+# ================================================================================================================ #
 # codes below is used to decompress the data in a4
-# this function decompress the data in a4 using cadd method
+
 cadd_decompress:
     #reset the temp value  to zero
     li t0 0
@@ -590,9 +615,11 @@ cli_decompress:
     jr ra
 
 # codes above is used to decompress the data in a4
-# ===================================================================================== #
+# ================================================================================================================ #
 
-# ===================================================================================== #
+# ================================================================================================================ #
+
+# ================================================================================================================ #
 # codes below are for output handler
 output_handler:
     # get 4 words in the stack
@@ -666,12 +693,11 @@ return_output_cmd:
     # return 
     jr ra
 # codes above are for output handler
-# ===================================================================================== #
+# ================================================================================================================ #
 
-#==================================================================#
+# ================================================================================================================ #
 #codes below are some helpful functions
 
-# this function is used to print an int variable in a1 
 print_int:
     # ID for print int 
     li a0,1
@@ -680,7 +706,6 @@ print_int:
     # return 
     jr ra
 
-# this function is used to print a new line in a1
 print_newline:
     # load a1 with '\n'
     li a1,'\n'
@@ -691,8 +716,6 @@ print_newline:
     # return
     jr ra
 
-# this function is used to print all int variables whose head is in a2 with length in a3
-# after each number, there is a new line
 print_ints:
     # move sp one word below
     addi sp,sp,-4
@@ -721,6 +744,7 @@ return_print_ints:
     addi sp,sp,4
     # return 
     jr ra
+
 # codes above are some helpful functions
-# ==================================================================#
+# ================================================================================================================ #
 
