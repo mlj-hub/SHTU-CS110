@@ -703,6 +703,357 @@ return_output_cmd:
 # ================================================================================================================ #
 
 # ================================================================================================================ #
+# codes below are for change offset
+
+change_offset:
+    # get 
+    addi sp,sp,-16
+    # store return address
+    sw ra,0(sp)
+    # store data array
+    sw a2,4(sp)
+    # store state array
+    sw a3,8(sp)
+    # store line num
+    sw a1,12(sp)
+    # let t0 be i and initialize it to 0
+    li t0,0
+    loop_change_offset:
+        # /if i = line num,return
+        beq t0,a1,return_change_offset
+        # get state array into t1
+        lw t1,0(a3)
+        # get cmd address into a4
+        mv a4,a2
+        # get 2 into t2 for feather check
+        li t2,2
+        # get 3 into t3 for feather check
+        li t3,3
+        # get 4 into t4 for feather check
+        li t4,4
+        # get 5 into t5 for feather check
+        li t5,5
+        # /if the state is 2, the cmd is branch
+        beq t1,t2,call_get_j_offset
+        # /if the state is 3, the cmd is branch
+        beq t1,t3,call_get_j_offset
+        # /if the state is 4, the cmd is jump
+        beq t1,t4,call_get_b_offset
+        # /if the state is 5, the cmd is jump
+        beq t1,t5,call_get_b_offset
+        # /else continue
+        j continue_change_offset
+
+        # get b offset into a5
+        call_get_b_offset: jal get_b_offset
+        # get state array pointer into a6
+        mv a6,a3
+        # calc new offset and store it into a5
+        jal calc_new_offset
+        # get new branch cmd and store it into data array
+        jal get_new_b_cmd
+        # continue
+        j continue_change_offset
+
+        # get j offset into a5
+        call_get_j_offset: jal get_j_offset
+        # get state array pointer into a6
+        mv a6,a3
+        # calc new offset and store it into a5
+        jal calc_new_offset
+        # get new jump cmd and store it into data array
+        jal get_new_j_cmd
+        # continue 
+        j continue_change_offset
+
+
+get_new_j_cmd:
+    # get cmd into t1
+    lw t1,0(a4)
+    # store correct offset into t2 and initialize it to zero
+    li t2,0
+    # use t3 to store part of the offset
+    # get offset(19:12) into t3
+    srli t3,a5,12
+    # clear the higher bits
+    andi t3,t3,0xff
+    # merge t3 into t2
+    or t2,t2,t3
+    # get offset(11) into t3
+    srli t3,a5,11
+    # clear other bits
+    andi t3,t3,0x1
+    #move offset(11) into its position
+    slli t3,t3,8
+    # merge t3 into t2
+    or t2,t2,t3
+    # get offset(10:1) into t3
+    srli t3,a5,1
+    # clear other bits
+    andi t3,t3,0x3ff
+    # move offset(10:1) into their position
+    slli t3,t3,9
+    # merge t3 into t2
+    or t2,t2,t3
+    # get offset(20) and the signal bits into t3
+    srai t3,a5,20
+    # move offset(20) into its position
+    slli t3,t3,19
+    # merge t3 into t2
+    or t2,t3,t2
+    # now t2 get the correct imm
+    # left shift t1(cmd) by 20 bits to clear the imm
+    slli t1,t1,20
+    # right shift t1(cmd) by 20 bits to clear the imm
+    srli t1,t1,20
+    # move t2 to make the imm into its position
+    slli t2,t2,12
+    # merge t2 into t1
+    or t1,t1,t2
+    # store the new cmd into a4
+    sw t1,0(a4)
+    # return 
+    jr ra
+
+get_new_b_cmd:
+    # get cmd into t1
+    lw t1,0(a4)
+    # store imm(4:1|11) into t2 and initialize it to zero
+    li t2,0
+    # use t3 to store part of the offset
+    # sotre offset(11) into t3
+    andi t3,a5,0x800
+    # move offset(11) to its positon
+    srli t3,t3,11
+    # merge t3 into t2
+    or t2,t2,t3
+    # get offset(4:1) into t3
+    andi t3,a5,0x1e
+    # merge t3 into t2
+    or t2,t2,t3
+    # clear coresponding positon of origin cmd
+    andi t1,t1,0xf80
+    # move t2 to make imm5 to its position
+    slli t2,t2,7
+    # merge t2 into t1
+    or t1,t2,t1
+    # store imm(12|10:5) into t2 and initialize it to zero
+    li t2,0
+    # get offset(10:5) into t3
+    andi t3,a5, 0x7e0
+    # move t3 to get offset(10:5) into its position
+    slli t3,t3,5
+    # merge t3 into t2
+    or t2,t2,t3
+    # get offset(12) and the signal bits into t3
+    srai t3,a5,12
+    # move t3 to get the offset(12) into its position
+    slli t3,t3,6
+    # merge t3 into t2
+    or t2,t2,t3
+    # move t2 to make imm7 to its position
+    slli t2,t2,25
+    # clear the imm7 of origin cmd
+    slli t1,t1,7
+    # clear the imm7 of origin cmd
+    srli t1,t1,7
+    # merge t2 into t1
+    or t1,t1,t2
+    # store t1 into data array
+    sw t1,0(a4)
+    # return 
+    jr ra
+
+
+calc_new_offset:
+    # let t2 be the new offset and initialize it to 0
+    li t2,0
+    # load 2 into t2 for feather check
+    li t3,2
+    # load 4 into t4 for feather check
+    li t4,4
+    # /if the offset is more than 0, loop down
+    bgt a5,zero,loop_down_calc_new_offset
+    # /else, loop up
+    # move the state array one word after since jump up donnot consider the cmd it
+    addi a6,a6,-4
+    # loop up
+    j loop_up_calc_new_offset
+    loop_up_calc_new_offset:
+        # /if offset is 0, return
+        beqz a5,return_calc_new_offset
+        # add new offset by -4
+        addi t2,t2,-4
+        # get state array into t5
+        lw t5,0(a6)
+        # /if the state is 0, increase the offset by 4
+        beqz t5,increase_4
+        # /if the state is 2, increase the offset by 4
+        beq t5,t3,increase_4
+        # /if the state is 4, increase the offset by 4
+        beq t5,t4,increase_4
+        j increase_2
+        
+    loop_down_calc_new_offset: 
+        # /if offset is 0, return
+        beqz a5,return_calc_new_offset
+        # add new offset by 4
+        addi t2,t2,4
+        # get state array into t5
+        lw t5,0(a6)
+        # /if the state is 0, decrease the offset by 4
+        beqz t5,decrease_4
+        # /if the state is 2, decrease the offset by 4
+        beq t5,t3,decrease_4
+        # /if the state is 4, decrease the offset by 4
+        beq t5,t4,decrease_4
+        j decrease_2
+
+decrease_2:
+    # decrease offset by 2
+    addi a5,a5,-2
+    # continue
+    j continue_down_calc_new_offset
+
+decrease_4:
+    # decrease offset by 4
+    addi a5,a5,-4
+    # continue
+    j continue_down_calc_new_offset
+
+continue_down_calc_new_offset:
+    # move state array one word forword
+    addi a6,a6,4
+    # continue
+    j loop_down_calc_new_offset
+
+increase_2:
+    # increase offset by 2
+    addi a5,a5,2
+    # continue
+    j continue_up_calc_new_offset
+
+increase_4:
+    # increase offset by 4
+    addi a5,a5,4
+    # continue
+    j continue_up_calc_new_offset
+
+continue_up_calc_new_offset:
+    # move state array one word afterword
+    addi a6,a6,-4
+    # continue
+    j loop_up_calc_new_offset
+
+
+return_calc_new_offset:
+    # move new_offset into a5
+    mv a5,t2
+    # return 
+    jr ra
+continue_change_offset:
+    # i++
+    addi t0,t0,1
+    # move data array one word forward
+    addi a2,a2,4
+    # move state array one word forward
+    addi a3,a3,4
+    # continue
+    j loop_change_offset
+get_j_offset:
+    # get cmd into a5
+    lw a5,0(a4)
+    # get all imm into t1 by right shift the cmd by 12 bits(since the signal bit is the first,keep it)
+    srai t1,a5,12
+    # use t2 to store the offset and t3 to store the part of the offset
+    # store imm(20|10:1) into t2 by right shift the imm by 9 bits
+    srli t2,t1,9
+    # get imm(10:1) into t2 by and a signal on t2
+    andi t2,t2,0x3ff
+    # left shift t2 by 1 bit to get the least significant bit zero,now the t2 get imm(10:0s)
+    slli t2,t2,1
+    # get 11 bit into t3 by right shift the imm by 8 bits
+    srli t3,t1,8
+    # make other bits zero
+    andi t3,t3,0x1
+    # left shift t3 by 11 bits to make 11 bit inot its position
+    slli t3,t3,11
+    # merge it into t2 and now t2 get imm(11:0)
+    or t2,t2,t3
+    # get imm(19:12) by and a signal onto t1 and store it into t3
+    andi t3,t1,0xff
+    # left shift t3 by 12 bits to make bit 19:12 their position
+    slli t3,t3,12
+    # merge t3 into t2 and now t2 get imm(19:0)
+    or t2,t2,t3
+    # get the signal bits and imm (20) into t3 by right shifting t1 by 19 bits
+    srai t3,t2,19
+    # left shift t3 to make bit 20 its position
+    slli t3,t3,19
+    # merge t3 into t2
+    or t2,t2,t3
+    # now t2 get the offset, store it into a5
+    mv a5,t2
+    # return 
+    jr ra
+
+get_b_offset:
+    # get cmd into a5
+    lw a5,0(a4)
+    # get imm(12|10:5) into t1 with sign bits
+    srai t1,a5,25
+    # left shift t1 by 5 bits to save space for imm(4:1|11)
+    slli t1,t1,5
+    # get imm(4:1|11) into t2
+    srli t2,a5,7
+    # and t2 with a signal to clear high bits
+    andi t2,t2, 0x1f
+    # merge t2 with t1 into t1 to make t1 the whole imm
+    or t1,t1,t2
+    # use t2 for offset and t3 for part of the imm
+    # get imm(4:1) into t2 by and a signal 
+    andi t2,t1,0x1e
+    # get imm(10:5) into t3
+    andi t3,t1,0x7e0
+    # merge t3 into t2
+    or t2,t2,t3
+    # get imm(11) into t3
+    andi t3,t1,0x1
+    # left shift t3 by 11 bits to get 11th bit into right position
+    slli t3,t3,11
+    # merge t3 into t2
+    or t2,t2,t3
+    # get imm(31:12) into t3
+    srai t3,t1,11
+    # left shift t3 by 12 bits to get 11th bit into right position
+    slli t3,t3,12
+    # merge t3 into t2
+    or t2,t2,t3
+    # now t2 get the correct offset
+    # move t2 into a5
+    mv a5,t2
+    # return 
+    jr ra
+
+
+return_change_offset:
+    # load back return address
+    lw ra,0(sp)
+    # load back data array
+    lw a2,4(sp)
+    # load back state array
+    lw a3,8(sp)
+    # load back line num
+    lw a1,12(sp)
+    # reset stack
+    addi sp,sp,16
+    # return 
+    jr ra
+
+# codes above are for change offset
+# ================================================================================================================ #
+
+# ================================================================================================================ #
 #codes below are some helpful functions
 
 print_int:
