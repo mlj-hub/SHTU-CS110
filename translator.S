@@ -268,9 +268,9 @@ check_01:
 
     # handle cjal
     cjal: 
-    # set 3 to t2
-    li t2,3
-    # store t2(3) into state array
+    # set 5(16bits jump) to t2
+    li t2,5
+    # store t2(5) into state array
     sw t2,0(a3)
     # call cjal decompress
     jal cjal_decompress
@@ -289,9 +289,9 @@ check_01:
 
     # handle cj 
     cj: 
-    # set 3 to t2
-    li t2,3
-    # store t2(3) into state array
+    # set 5(16bits jump) to t2
+    li t2,5
+    # store t2(5) into state array
     sw t2,0(a3)
     # call cj decompress
     jal cj_decompress
@@ -300,7 +300,7 @@ check_01:
 
     # handle cbeqz
     cbeqz: 
-    # set 3 to t2
+    # set 3 (16bits branch) to t2
     li t2,3
     # store t2(3) into state array
     sw t2,0(a3)
@@ -311,7 +311,7 @@ check_01:
 
     # handle cbnez
     cbnez: 
-    # set 3 to t2
+    # set 3 (16bits branch) to t2
     li t2,3
     # store t2(3) into state array
     sw t2,0(a3)
@@ -408,13 +408,20 @@ b_j_check_32:
     # load branch opcode into t4
     li t4,0x63
     # /if the cmd is jump, set the state array to 2
-    beq t2,t3,32_j_b_state_set
+    beq t2,t3,j_state_set
     # /if the cmd is branch, set the state array to 2
-    beq t2,t4,32_j_b_state_set
+    beq t2,t4,b_state_set
     # /else, leave the state array unchanged, which is 0
     j continue_check_type
-    32_j_b_state_set:
-        # load 2 (32 jump or branch state) into t3
+    j_state_set:
+        # load 4 (32bits jump) into t3
+        li t3,4
+        # change the state array
+        sw t3,0(a3)
+        # continue
+        j continue_check_type
+    b_state_set:
+        # load 2 (32bits branch) into t3
         li t3,2
         # change the state array
         sw t3,0(a3)
