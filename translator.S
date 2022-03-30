@@ -577,7 +577,7 @@ cli_decompress:
     #return 
     jr ra
 
-# codes above is used to decompress the data in a4
+ # codes above is used to decompress the data in a4
 # ===================================================================================== #
 
 #==================================================================#
