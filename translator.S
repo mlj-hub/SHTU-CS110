@@ -621,11 +621,11 @@ cli_decompress:
     #right move t0 2 bit to get imm[4:0] from the cli cmd
     srli t1 t0 2
     #get the last 5 bit of t1 to get imm[4:0]
-    andi t1 t1 5
+    andi t1 t1 0x1f
     #right move t0 7 bit to get rd from the cli cmd
     srli t2 t0 7
     #get the last 5 bit of t2 to get rd
-    andi t2 t2 5
+    andi t2 t2 0x1f
     #right move t0 12 bit to get imm[5] from the cli cmd
     srli t3 t0 12
     #get the last 1 bit of t1 to get imm[5]
@@ -653,6 +653,7 @@ cli_decompress:
     #return 
     jr ra
 clui_decompress:
+    #may have bugs in clui
     #reset the temp value  to zero
     li t0 0
     li t1 0
@@ -666,11 +667,11 @@ clui_decompress:
     #right move t0 2 bit to get nzimm[16:12] from the clui cmd
     srli t1 t0 2
     #get the last 5 bit of t1 to get nzimm[16:12]
-    andi t1 t1 5
+    andi t1 t1 0x1f
     #right move t0 7 bit to get rd from the cli cmd
     srli t2 t0 7
     #get the last 5 bit of t2 to get rd
-    andi t2 t2 5
+    andi t2 t2 0x1f
     #right move t0 12 bit to get imm[5] from the cli cmd
     srli t3 t0 12
     #get the last 1 bit of t1 to get imm[5]
@@ -695,7 +696,7 @@ clui_decompress:
     jr ra
 
 caddi_decompress:
-        #reset the temp value  to zero
+    #reset the temp value  to zero
     li t0 0
     li t1 0
     li t2 0
@@ -705,6 +706,129 @@ caddi_decompress:
     li t6 0
     #load value to t0 from the address of a4
     lw t0 0(a4)
+    #right move t0 2 bit to get nzimm[4:0] from the caddi cmd
+    srli t1 t0 2
+    #get the last 5 bit of t1 to get nzimm[4:0]
+    andi t1 t1 0x1f
+    #right move t0 7 bit to get rd from the caddi cmd
+    srli t2 t0 7
+    #get the last 5 bit of t2 to get rd
+    andi t2 t2 0x1f
+    #right move t0 12 bit to get nzimm[5] from the caddi cmd
+    srli t3 t0 12
+    #get the last 1 bit of t1 to get nzimm[5]
+    andi t3 t3 1
+    #add op code to output cmd,the output cmd is t4,opcode is 0x13
+    addi t4 t4 0x13
+    #left move t2 7 bit to get the rd of the output cmd
+    slli t2 t2 7
+    #add rd to the output cmd
+    add t4 t4 t2
+    #add func3 to output cmd,since the opcode is 0,we add zero
+    addi t4 t4 0
+    #left move t2 8 bit more to get the rs1 of the output cmd 
+    slli t2 t2 8
+    #add rs1 to output cmd ,since the rs1 is rd ,we add t2 to t4
+    add t4 t4 t2
+    #left move t1 20 bit to get nzimm[4:0]
+    slli t1 t1 20
+    #add nzimm[4:0] to the output cmd
+    add t4 t4 t1
+    #left move t3 25 bit to get nzimm[5]
+    slli t3 t3 25
+    #add nzimm[5] to the output cmd
+    add t4 t4 t3
+    #store the output cmd to the final cmd
+    sw t4 0(a4)
+    #return 
+    jr ra
+cslli_decompress:
+    #reset the temp value  to zero
+    li t0 0
+    li t1 0
+    li t2 0
+    li t3 0
+    li t4 0
+    li t5 0
+    li t6 0
+    #load value to t0 from the address of a4
+    lw t0 0(a4)
+    #right move t0 2 bit to get shamt[4:0] from the cslli cmd
+    srli t1 t0 2
+    #get the last 5 bit of t1 to get shamt[4:0]
+    andi t1 t1 0x1f
+    #right move t0 7 bit to get rd from the cslli cmd
+    srli t2 t0 7
+    #get the last 5 bit of t2 to get rd
+    andi t2 t2 0x1f
+    #right move t0 12 bit to get shamt[5] from the cslli cmd
+    srli t3 t0 12
+    #get the last 1 bit of t1 to get shamt[5]
+    andi t3 t3 1
+    #add op code to output cmd,the output cmd is t4,opcode is 0x13
+    addi t4 t4 0x13
+    #left move t2 7 bit to get the rd of the output cmd
+    slli t2 t2 7
+    #add rd to the output cmd
+    add t4 t4 t2
+    #give t5 the value of func3
+    li t5 1
+    #left move t5 5 bit to add func3 to the output cmd
+    slli t5 t5 12
+    #add func3 to output cmd,since the opcode is 0,we add zero
+    addi t4 t4 t5
+    #left move t2 8 bit more to get the rs1 of the output cmd 
+    slli t2 t2 8
+    #add rs1 to output cmd ,since the rs1 is rd ,we add t2 to t4
+    add t4 t4 t2
+    #left move t1 20 bit to get shamt[4:0]
+    slli t1 t1 20
+    #add nzimm[4:0] to the output cmd
+    add t4 t4 t1
+    #left move t3 25 bit to get shamt[5]
+    slli t3 t3 25
+    #add nzimm[5] to the output cmd
+    add t4 t4 t3
+    #store the output cmd to the final cmd
+    sw t4 0(a4)
+    #return 
+    jr ra
+csw_decompress:
+    #reset the tmp value to zero
+    li t0 0
+    li t1 0
+    li t2 0
+    li t3 0
+    li t4 0
+    li t5 0
+    li t6 0
+    #load value to t0 from the address of a4
+    lw t0 0(a4)
+    #right move t0 2 bit to get rd' and store it in t1
+    srli t1 t0 2
+    #get the last 3 bit of t1 as rd'
+    andi t1 t1 0x7
+    #add 8 to rd' to change it into rd 
+    addi t1 t1 8
+    #right move t0  6 bit to get offset[2]
+    srli t2 t0 6
+    #get the last bit of t2 to get offset[2]
+    andi t2 t2 1
+    #right move t0 5 bit to get offset[6]
+    srli t6 t0 5
+    #get the last bit of t6 to get offset[6]
+    andi t6 t6 1
+    #right move t0 7 bit to get rs1'
+    srli t3 t0 7
+    #get the last 3 bit of t3 to get rs1'
+    andi t3 t3 0x7
+    #right move t0 5 bit to get offset[5:3]
+    srli t4 t0 10
+    #get the last 3 bit of t6 to get offset[5:3s]
+    andi t4 t4 0x7
+
+    #return 
+    jr ra
 # codes above is used to decompress the data in a4
 # ================================================================================================================ #
 
