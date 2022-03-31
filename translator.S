@@ -39,7 +39,7 @@ main:
     # handle input
     jal input_handler
     # de compress
-    jal decompress
+    jal de_compress
     # handle output
     jal output_handler
     
@@ -150,10 +150,29 @@ de_compress:
     sw a3,0(sp)
     # call check_type
     jal check_type
+    # load back len num
+    lw a1,8(sp)
+    # load back data array
+    lw a2,4(sp)
+    # load back state array
+    lw a3,0(sp)
     # call change_offset
     jal change_offset
     # return 
     j return_de_compress
+
+return_de_compress:
+    # load back return address
+    lw ra,12(sp)
+    # load back len num
+    lw a1,8(sp)
+    # load back data array
+    lw a2,4(sp)
+    # load back state array
+    lw a3,0(sp)
+    # reset stack
+    addi sp,sp,16
+    jr ra
 # codes above are main funciton of de compressing
 # ================================================================================================================ #
 
@@ -422,20 +441,11 @@ continue_check_type:
     j loop_check_type
 
 return_check_type:
-    # return 
-    jr ra
-
-return_de_compress:
     # load back return address
-    lw ra,12(sp)
-    # load back len num
-    lw a1,8(sp)
-    # load back data array
-    lw a2,4(sp)
-    # load back state array
-    lw a3,0(sp)
+    lw ra,0(sp)
     # reset stack
-    addi sp,sp,16
+    addi sp,sp,4
+    # return 
     jr ra
 
 
