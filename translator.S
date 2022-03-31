@@ -1427,9 +1427,10 @@ cbeqz_cbnez_decompress:
     li t1,0
     # use t3 to store part of the offset
     # sotre offset(11) into t3
-    andi t3,t2,0x800
-    # move offset(11) to its positon
-    srli t3,t3,11
+	# first right shift the offset and store it into t3
+    srli t3,t2,11
+    # then get the 11 bit
+    andi t3,t3,0x1
     # merge t3 into t1
     or t1,t1,t3
     # get offset(4:1) into t3
@@ -1711,17 +1712,25 @@ get_new_b_cmd:
     li t2,0
     # use t3 to store part of the offset
     # sotre offset(11) into t3
-    andi t3,a5,0x800
-    # move offset(11) to its positon
-    srli t3,t3,11
+	# first right shift the offset and store it into t3
+    srli t2,a5,11
+    # then get the 11 bit
+    andi t3,t3,0x1
     # merge t3 into t2
     or t2,t2,t3
     # get offset(4:1) into t3
     andi t3,a5,0x1e
     # merge t3 into t2
     or t2,t2,t3
+    # load clear signal 0xfffff07f into t4
+    # first load high bits
+    lui t4, 0xfffff
+    # then load 0x7f into t5
+    li t5,0x7f
+	# finally, merge t5 into t4
+    or t4,t4,t5
     # clear coresponding positon of origin cmd
-    andi t1,t1,0xf80
+    and t1,t1,t4
     # move t2 to make imm5 to its position
     slli t2,t2,7
     # merge t2 into t1
