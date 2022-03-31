@@ -227,17 +227,17 @@ check_01:
     # /if funct3 is 000, the cmd is caddi
     beqz t2,caddi
     # /if funct3 is 001, the cmd is cjal
-    beq t2,s1,cjal
+    beq t2,s1,cjal_cj
     # /if funct3 is 010, the cmd is cli
     beq t2,s2,cli
     # /if funct3 is 011, the cmd is clui
     beq t2,s3,clui
     # /if funct3 is 101, the cmd is cj
-    beq t2,s5,cj
+    beq t2,s5,cjal_cj
     # /if funct3 is 110, the cmd is cbeqz
-    beq t2,s6,cbeqz
+    beq t2,s6,cbeqz_cbnez
     # /if funct3 is 111, the cmd is cbnez
-    beq t2,s7,cbnez
+    beq t2,s7,cbeqz_cbnez
     # /else, continue checking 
     # right shift the cmd by 10 bits to get the highest 6 bits into t2
     srli t2,t1,10
@@ -271,13 +271,13 @@ check_01:
     j continue_check_type
 
     # handle cjal
-    cjal: 
+    cjal_cj: 
     # set 5(16bits jump) to t2
     li t2,5
     # store t2(5) into state array
     sw t2,0(a3)
     # call cjal decompress
-    jal cjal_decompress
+    jal cjal_cj_decompress
     # after decompress, continue
     j continue_check_type
 
@@ -291,36 +291,14 @@ check_01:
     # after decompress, continue
     j continue_check_type
 
-    # handle cj 
-    cj: 
-    # set 5(16bits jump) to t2
-    li t2,5
-    # store t2(5) into state array
-    sw t2,0(a3)
-    # call cj decompress
-    jal cj_decompress
-    # after decompress, continue
-    j continue_check_type
-
     # handle cbeqz
-    cbeqz: 
+    cbeqz_cbnez: 
     # set 3 (16bits branch) to t2
     li t2,3
     # store t2(3) into state array
     sw t2,0(a3)
     # call cbeqz decompress
-    jal cbeqz_decompress
-    # after decompress, continue
-    j continue_check_type
-
-    # handle cbnez
-    cbnez: 
-    # set 3 (16bits branch) to t2
-    li t2,3
-    # store t2(3) into state array
-    sw t2,0(a3)
-    # call cbnez decompress
-    jal cbnez_decompress
+    jal cbeqz_cbnez_decompress
     # after decompress, continue
     j continue_check_type
 
@@ -837,6 +815,256 @@ csw_decompress:
 
     #return 
     jr ra
+
+cjal_cj_decompress:
+    # get cmd into t1
+    lw t1,0(a4)
+    # get imm into t1
+    srli t1,t1,2
+    # clear highest three bits 
+    andi t1,t1,0x7ff
+    # now t1 contians imm11
+    # store offset into t2 and use t3 to store part of the offset
+    # initialize t2 to 0
+    li t2,0
+    # store imm(5) into t3
+    andi t3,t1,0x1
+    # move t3 to make imm(5) into its position
+    slli t3,t3,5
+    # merge t3 into t2
+    or t2,t2,t3
+    # get imm(3:1) into t3 and they are in their correct position
+    andi t3,t1,0xe
+    # merge t3 into t2
+    or t2,t2,t3
+    # get imm(7) into t3
+    andi t3,t1,0x10
+    # move t3 to make imm(7) into its position
+    slli t3,t3,3
+    # merge t3 into t2
+    or t2,t2,t3
+    # get imm(6) into t3
+    andi t3,t1,0x20
+    # move t3 to make imm(6) into its position
+    slli t3,t3,1
+    # merge t3 into t2
+    or t2,t2,t3
+    # get imm(10) into t3
+    andi t3,t1,0x40
+    # move t3 to make imm(10) into its position
+    slli t3,t3,4
+    # merge t3 into t2
+    or t2,t2,t3
+    # get imm(9:8) into t3
+    andi t3,t1,0x180
+    # move t3 to make imm(9:8) into its position
+    slli t3,t3,1
+    # merge t3 into t2
+    or t2,t2,t3
+    # get imm(4) into t3
+    andi t3,t1,0x200
+    # move t3 to make imm(4) into its position
+    srli t3,t3,5
+    # merge t3 into t2
+    or t2,t2,t3
+    # sign extended imm(11)
+    slli t3,t1,21
+    # sign extend
+    srai t3,t3,31
+    # move t3 to make imm(11) and sign bits into their position
+    slli t3,t3,11
+    # merge t3 into t2
+    or t2,t2,t3
+    # now, t2 get the correct offset
+    # get opcode into t3
+    li t3,0x6f
+    # use t1 to store the 32bits command and initialzie it to 0
+    li t1,0
+    # merge t3 into t1
+    or t1,t1,t3
+    # get sign bit of offset into t3
+    srai t3,t2,11
+    # use t4 to store new imm and initialize it to 0
+    li t4,0
+    # get offset(11|19:12) which are all sign bits into t3
+    andi t3,t3,0x1ff
+    # merge t3 into t4
+    or t4,t4,t3
+    # get offset(10:1) int0 t3
+    andi t3,t2,0x7fe
+    # move t3 to get offset(10:1) its positon
+    slli t3,t3,8
+    # merge t3 into t4
+    or t4,t3,t3
+    # get offset(20) into t3
+    srli t3,t2,20
+    # clear other bits 
+    andi t3,t3,0x1
+    # move t3 to make offset(20) its position
+    slli t3,t3,19
+    # merge t3 into t4
+    or t4,t3,t4
+    # now t4 get the correct imm
+    # move t4 to make imm its position
+    slli t4,t4,12
+    # merge t4 into t1
+    or t1,t4,t1
+    # get origin cmd  into t2
+    lw t2, 0(a4)
+    # get the highest bit to check what cnmd it is
+    srli t2,t2,15
+    # /if the highest bit is zero, the cmd is cjal
+    beqz t2,cjal_decompress
+    # /if the cmd is cj, the src is zero, just store the new cmd
+    cj_decompress: j store_cmd
+    cjal_decompress:
+        # /if the cmd is cjal, the src is x1, change the new cmd
+        # get 0x80 into t2
+        li t2,0x80
+        # merge t2 into t1
+        or t1,t1,t2
+        # store the new cmd
+        j store_cmd
+    # store t1 into data array
+    store_cmd:  
+    sw t1,0(a4)
+    # return 
+    jr ra
+
+cbeqz_cbnez_decompress:
+    # get cmd into t1
+    lw t1,0(a4)
+    # use t2 to store the offset and initialize it to zero
+    li t2,0
+    # use t3 to store part of the offset
+    # get offset(5) into t3
+    andi t3,t1,0x4
+    # move t3 to get offset(5) to its position
+    slli t3,t3,3
+    # merge t3 into t2
+    or t2,t2,t3
+    # store offset(2:1) into t3
+    andi t3,t1,0x18
+    # move t3 to get offset(2:1) to its position
+    srli t3,t3,2
+    # merge t3 into t2
+    or t2,t2,t3
+    # get offset(7:6) into t3
+    andi t3,t1,0x60
+    # move t3 to get offset(7:6) to its position
+    slli t3,t3,1
+    # merge t3 into t2
+    or t2,t2,t3
+    # new t2 gets the correct imm5
+    # move t1 to make imm3 to the rightest
+    srli t1,t1,10
+    # get offset(4:3) into t3
+    andi t3,t1,0x3
+    # move t3 to get offset(4:3) into its position
+    slli t3,t3,3
+    # merge t3 into t2
+    or t2,t2,t3
+    # get offset(8) into t3
+    andi t3,t1,0x4
+    # move t3 to get offset(8) into its position
+    slli t3,t3,6
+    # merge t3 into t2
+    or t2,t2,t3
+    # sign extended the offset
+    slli t2,t2,23
+    # sign extended the offset
+    srai t2,t2,23
+    # now t2 get the correct offset
+    
+    # use t4 to store the 32bits cmd and initialize it to opcode
+    li t4,0x63
+    # store imm(4:1|11) into t1 and initialize it to zero
+    li t1,0
+    # use t3 to store part of the offset
+    # sotre offset(11) into t3
+    andi t3,t2,0x800
+    # move offset(11) to its positon
+    srli t3,t3,11
+    # merge t3 into t1
+    or t1,t1,t3
+    # get offset(4:1) into t3
+    andi t3,t2,0x1e
+    # merge t3 into t1
+    or t1,t1,t3
+    # move t1 to make imm5 to its position
+    slli t1,t1,7
+    # merge t1 into t4
+    or t4,t4,t1
+
+    # store imm(12|10:5) into t1 and initialize it to zero
+    li t1,0
+    # get offset(10:5) into t3
+    andi t3,t2, 0x7e0
+    # move t3 to get offset(10:5) into its position
+    slli t3,t3,5
+    # merge t3 into t1
+    or t1,t1,t3
+    # get offset(12) and the signal bits into t3
+    srai t3,t2,12
+    # move t3 to get the offset(12) into its position
+    slli t3,t3,6
+    # merge t3 into t1
+    or t1,t1,t3
+    # move t1 to make imm7 to its position
+    slli t1,t1,25
+    # merge t1 into t4
+    or t4,t4,t1
+    # now t4 has no func3, rs1 and rs2
+    # load origin cmd into t1
+    lw t1,0(a4)
+    # get rs1 into t2
+    # first shift the origin cmd to make lower bits zero
+    srli t2,t1,15
+    # then, get rs1
+    andi t2,t2,0x1f
+    # change the popular register into origin register by adding it by 8
+    addi t2,t2,8
+    # move t2 to make rs1 its position
+    slli t2,t2,15
+    # merge t2 into t4
+    or t4,t4,t2
+    # get rs2 into t2
+    # first shift the origin cmd to make lower bits zero
+    srli t2,t1,20
+    # then, get rs1
+    andi t2,t2,0x1f
+    # change the popular register into origin register by adding it by 8
+    addi t2,t2,8
+    # move t2 to make rs1 its position
+    slli t2,t2,20
+    # merge t2 into t4
+    or t4,t4,t2
+    # now t4 has no funct3
+    # get cmd(13) into t2 to check which compressed cmd it is
+    # first right shift origin to make the lower bits zero
+    srli t2,t1,13
+    # then clear other bits
+    andi t2,t2,0x1
+    # /if cmd(13) is 0, the cmd is cbeqz
+    beqz t2,cbeqz_decompress
+    # /else, it is cbneqz
+    cbnez_decompress: 
+        # load 0x1 into t2
+        li t2,0x1
+        # move t2 to get func3 its positon
+        slli t2,t2,12
+        # merge t2 into t4
+        or t4,t4,t2
+        # then store the new cmd
+        sw t4,0(a4)
+        # return 
+        jr ra
+    cbeqz_decompress:
+        # /if the cmd is cbeqz, funct3 is 0, need to do nothing, just store
+        sw ,t4,0(a4)
+        # return 
+        jr ra
+
 # codes above is used to decompress the data in a4
 # ================================================================================================================ #
 
