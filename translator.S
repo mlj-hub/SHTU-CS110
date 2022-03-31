@@ -1060,7 +1060,7 @@ cxor_decompress:
     #return
     jr ra
 csub_decompress:
-        #reset the tmp value to zero
+    #reset the tmp value to zero
     li t0 0
     li t1 0
     li t2 0
@@ -1102,6 +1102,150 @@ csub_decompress:
     addi t3 t3 0x40000000
     #store the decompressed cmd to the address of a4
     sw t3 0(a4)
+    #return
+    jr ra
+csrli_decompress:
+    #reset the tmp value to zero
+    li t0 0
+    li t1 0
+    li t2 0
+    li t3 0
+    li t4 0
+    li t5 0
+    li t6 0
+    #load value to t0 from the address of a4
+    lw t0 0(a4)
+    #right move 2 bit to get the shamt[4:0]
+    srli t1 t0 2
+    #get the last 5 bit of t1 to get shamt[4:0]
+    andi t1 t1 0x1f
+    #right move 7 bit to get rd
+    srli t2 t0 7
+    #get the last 3 bit of t2 to get rd
+    andi t2 t2 0x07
+    #right move 12 bit to get shamt[5]
+    srli t3 t0 12
+    #get the last bit of t3 to get shamt[5]
+    andi t3 t3 1
+    #add opcode to the output cmd,opocode is 0x13
+    addi t4 t4 0x13
+    #left move rd 7 bit to get the rd of the output cmd
+    slli t2 t2 7
+    #add the rd to the output cmd
+    add t4 t4 t2
+    #add func3 to the output cmd,func3 is 0x5000
+    addi t4 t4 0x5000
+    #left move rd 8 bit more to get the rs1 of the output cmd
+    slli t2 t2 8
+    #add the rs1 to the output cmd
+    add t4 t4 t2
+    #left move shamt[4:0] 20 bit to get the shamt[4:0] of the output
+    slli t1 t1 20
+    #add the shamt[4:0] to the output cmd
+    add t4 t4 t1
+    #left move shamt[5] 25 bit to get the shamt[5] of the output cmd
+    slli t3 t3 25
+    #add the shamt[5] to the output cmd
+    add t4 t4 t3
+    #store the output cmd to the address of the a4
+    # the func7 of this cmd is zero,so we add 0
+    sw t4 0(a4)
+    #return
+    jr ra
+csrai_decompress:
+    #reset the tmp value to zero
+    li t0 0
+    li t1 0
+    li t2 0
+    li t3 0
+    li t4 0
+    li t5 0
+    li t6 0
+    #load value to t0 from the address of a4
+    lw t0 0(a4)
+    #right move 2 bit to get the shamt[4:0]
+    srli t1 t0 2
+    #get the last 5 bit of t1 to get shamt[4:0]
+    andi t1 t1 0x1f
+    #right move 7 bit to get rd
+    srli t2 t0 7
+    #get the last 3 bit of t2 to get rd
+    andi t2 t2 0x07
+    #right move 12 bit to get shamt[5]
+    srli t3 t0 12
+    #get the last bit of t3 to get shamt[5]
+    andi t3 t3 1
+    #add opcode to the output cmd,opocode is 0x13
+    addi t4 t4 0x13
+    #left move rd 7 bit to get the rd of the output cmd
+    slli t2 t2 7
+    #add the rd to the output cmd
+    add t4 t4 t2
+    #add func3 to the output cmd,func3 is 0x5000
+    addi t4 t4 0x5000
+    #left move rd 8 bit more to get the rs1 of the output cmd
+    slli t2 t2 8
+    #add the rs1 to the output cmd
+    add t4 t4 t2
+    #left move shamt[4:0] 20 bit to get the shamt[4:0] of the output
+    slli t1 t1 20
+    #add the shamt[4:0] to the output cmd
+    add t4 t4 t1
+    #left move shamt[5] 25 bit to get the shamt[5] of the output cmd
+    slli t3 t3 25
+    #add the shamt[5] to the output cmd
+    add t4 t4 t3
+    #add func7 to the output cmd,func7 is 0x40000000
+    addi t4 t4 0x40000000
+    #store the output cmd to the address of the a4
+    sw t4 0(a4)
+    #return
+    jr ra
+candi_decompress:
+    #reset the tmp value to zero
+    li t0 0
+    li t1 0
+    li t2 0
+    li t3 0
+    li t4 0
+    li t5 0
+    li t6 0
+    #load value to t0 from the address of a4
+    lw t0 0(a4)
+    #right move 2 bit to get the shamt[4:0]
+    srli t1 t0 2
+    #get the last 5 bit of t1 to get shamt[4:0]
+    andi t1 t1 0x1f
+    #right move 7 bit to get rd
+    srli t2 t0 7
+    #get the last 3 bit of t2 to get rd
+    andi t2 t2 0x07
+    #right move 12 bit to get shamt[5]
+    srli t3 t0 12
+    #get the last bit of t3 to get shamt[5]
+    andi t3 t3 1
+    #add opcode to the output cmd,opocode is 0x13
+    addi t4 t4 0x13
+    #left move rd 7 bit to get the rd of the output cmd
+    slli t2 t2 7
+    #add the rd to the output cmd
+    add t4 t4 t2
+    #add func3 to the output cmd,func3 is 0x7000
+    addi t4 t4 0x7000
+    #left move rd 8 bit more to get the rs1 of the output cmd
+    slli t2 t2 8
+    #add the rs1 to the output cmd
+    add t4 t4 t2
+    #left move shamt[4:0] 20 bit to get the shamt[4:0] of the output
+    slli t1 t1 20
+    #add the shamt[4:0] to the output cmd
+    add t4 t4 t1
+    #left move shamt[5] 25 bit to get the shamt[5] of the output cmd
+    slli t3 t3 25
+    #add the shamt[5] to the output cmd
+    add t4 t4 t3
+    #store the output cmd to the address of the a4
+    sw t4 0(a4)
     #return
     jr ra
 
