@@ -1763,7 +1763,7 @@ get_new_b_cmd:
     # use t3 to store part of the offset
     # sotre offset(11) into t3
 	# first right shift the offset and store it into t3
-    srli t2,a5,11
+    srli t3,a5,11
     # then get the 11 bit
     andi t3,t3,0x1
     # merge t3 into t2
@@ -1790,7 +1790,7 @@ get_new_b_cmd:
     # get offset(10:5) into t3
     andi t3,a5, 0x7e0
     # move t3 to get offset(10:5) into its position
-    slli t3,t3,5
+    srli t3,t3,5
     # merge t3 into t2
     or t2,t2,t3
     # get offset(12) and the signal bits into t3
