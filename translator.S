@@ -590,7 +590,7 @@ cjalr_decompress:
     #left move t2 7 bit to add the value of rd to the decompress cmd
     slli t2 t2 7
     #add rd to decompress cmd t3
-    addi t3 t3 t2
+    add t3 t3 t2
     #add func3 to decompress cmd t3,since func3 should be 0,we add 0
     addi t3 t3 0
     #left move 10 bit to add the rs1 value to the decompress cmd
@@ -784,7 +784,7 @@ cslli_decompress:
     #left move t5 5 bit to add func3 to the output cmd
     slli t5 t5 12
     #add func3 to output cmd,since the opcode is 0,we add zero
-    addi t4 t4 t5
+    add t4 t4 t5
     #left move t2 8 bit more to get the rs1 of the output cmd 
     slli t2 t2 8
     #add rs1 to output cmd ,since the rs1 is rd ,we add t2 to t4
