@@ -678,7 +678,7 @@ clui_decompress:
     add t4 t4 t3
     #left move t4 14 vit to make nzimm[17] the top
     slli t4 t4 14
-    #right move t4 14 bit to satisfiy the extension 
+    #right move t4 14 bit arithmatically to make the nizmm[31:18] equal to nzimm[17]
     srai t4 t4 14
     #store the output cmd into the address 
     sw t4 0(a4)
@@ -912,11 +912,41 @@ csw_decompress:
     slli t4 t4 25
     #add offset[6:5] to output cmd
     add t5 t5 t4
+    #left move t1 20 bit to have rs2 of the output cmd
+    slli t1 t1 20
+    #add rs2 to the output cmd
+    add t5 t5 t1
+    #left move t3 20 bit to have rs1 of the output cmd
+    slli t3 t3 15
+    #add rs1 ti the output cmd
+    add t5 t5 t3 
     #store the output cmd into address a4
     sw t5 0(a4)
     #return 
     jr ra
 cand_decompress:
+    #reset the tmp value to zero
+    li t0 0
+    li t1 0
+    li t2 0
+    li t3 0
+    li t4 0
+    li t5 0
+    li t6 0
+    #load value to t0 from the address of a4
+    lw t0 0(a4)
+    #right move t0 2 bit to get rs2'
+    srli t2 t0 2
+    #get the last 3 bit of t2 to have rs2'
+    andi t2 t2 0x7
+    #add 8 to t2  to change rs2' to rs2
+    addi t2 t2 8
+    #right move t0 7 bit to get
+    srli t2 t0 2
+    # get the last 3 bit of t2 to have rs2'
+    andi t2 t2 0x7
+    #add 8 to t2  to change rs2' to rs2
+    addi t2 t2 8
     #return 
     jr ra
 cor_decompress:
