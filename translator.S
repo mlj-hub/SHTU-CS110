@@ -1674,13 +1674,13 @@ change_offset:
         # get 5 into t5 for feather check
         li t5,5
         # /if the state is 2, the cmd is branch
-        beq t1,t2,call_get_j_offset
+        beq t1,t2,call_get_b_offset
         # /if the state is 3, the cmd is branch
-        beq t1,t3,call_get_j_offset
+        beq t1,t3,call_get_b_offset
         # /if the state is 4, the cmd is jump
-        beq t1,t4,call_get_b_offset
+        beq t1,t4,call_get_j_offset
         # /if the state is 5, the cmd is jump
-        beq t1,t5,call_get_b_offset
+        beq t1,t5,call_get_j_offset
         # /else continue
         j continue_change_offset
 
@@ -1935,7 +1935,7 @@ get_j_offset:
     # merge t3 into t2 and now t2 get imm(19:0)
     or t2,t2,t3
     # get the signal bits and imm (20) into t3 by right shifting t1 by 19 bits
-    srai t3,t2,19
+    srai t3,t1,19
     # left shift t3 to make bit 20 its position
     slli t3,t3,19
     # merge t3 into t2
