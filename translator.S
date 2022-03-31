@@ -676,6 +676,10 @@ clui_decompress:
     slli t3 t3 17
     #add nzimm[17] to cmd
     add t4 t4 t3
+    #left move t4 14 vit to make nzimm[17] the top
+    slli t4 t4 14
+    #right move t4 14 bit to satisfiy the extension 
+    srai t4 t4 14
     #store the output cmd into the address 
     sw t4 0(a4)
     #return 
