@@ -182,6 +182,10 @@ return_de_compress:
 check_type:
     # let t0 be i and initialize it to zero
     li t0,0
+    # get one word on stack
+    addi sp , sp,-4
+    # store return address
+    sw ra,0(sp)
     loop_check_type:
         # /if i== len num , return
         beq t0,a1,return_check_type
@@ -189,10 +193,6 @@ check_type:
         addi sp,sp,-4
         # store t0 into stack
         sw t0,0(sp)
-        # move state array one word forward
-        addi a3,a3,4
-        # move data array one word forward
-        addi a2,a2,4
         # load cmd state into s2
         lw s2,0(a3)
         # get the address of cmd into a4
@@ -437,6 +437,10 @@ continue_check_type:
     addi sp,sp,4
     # i++
     addi t0,t0,1
+    # move state array one word forward
+    addi a3,a3,4
+    # move data array one word forward
+    addi a2,a2,4
     # continue loop
     j loop_check_type
 
