@@ -634,6 +634,10 @@ cli_decompress:
     slli t3 t3 25
     #add imm[5] to the output cmd
     add t4 t4 t3
+    #left move 6 bit to sign-extend
+    slli t4 t4 6
+    #right move 6 bit arithmatically to sign-extend
+    srai t4 t4 6 
     #store the output cmd to the final cmd
     sw t4 0(a4)
     #return 
@@ -728,6 +732,10 @@ caddi_decompress:
     slli t3 t3 25
     #add nzimm[5] to the output cmd
     add t4 t4 t3
+    #left move 6 bit to sign-extend
+    slli t4 t4 6
+    #right move 6 bit arithmatically to sign-extend
+    srai t4 t4 6 
     #store the output cmd to the final cmd
     sw t4 0(a4)
     #return 
@@ -1244,6 +1252,10 @@ candi_decompress:
     slli t3 t3 25
     #add the shamt[5] to the output cmd
     add t4 t4 t3
+    #left move 6 bit to sign-extend
+    slli t4 t4 6
+    #right move 6 bit arithmatically to sign-extend
+    srai t4 t4 6 
     #store the output cmd to the address of the a4
     sw t4 0(a4)
     #return
