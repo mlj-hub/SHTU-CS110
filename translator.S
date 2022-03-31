@@ -941,22 +941,168 @@ cand_decompress:
     andi t2 t2 0x7
     #add 8 to t2  to change rs2' to rs2
     addi t2 t2 8
-    #right move t0 7 bit to get
-    srli t2 t0 2
-    # get the last 3 bit of t2 to have rs2'
-    andi t2 t2 0x7
-    #add 8 to t2  to change rs2' to rs2
-    addi t2 t2 8
+    #right move t0 7 bit to get rs1'
+    srli t1 t0 2
+    # get the last 3 bit of t2 to have rs1'
+    andi t1 t1 0x7
+    #add 8 to t1  to change rs1' to rs1
+    addi t1 t1 8
+    #add opcode to output cmd t3 ,opcode is 0x33
+    addi t3 t3 0x33
+    #left move t1 7 bit to get rd value
+    slli t1 t1 7
+    #add rd to output cmd
+    add t3 t3 t1
+    #add func3 to outputcmd t3,func3 is  0x7000
+    addi t3 t3 0x7000
+    #left move t1 8 bit more to get rs1 value 
+    slli t1 t1 8
+    #add rs1 value to output cmd t3
+    add t3 t3 t1
+    #left move t2 20 bit to get rs2
+    slli t2 t2 20
+    #add  rs2 to the output cmd
+    add t3 t3 t2
+    #add func7 to output cmd ,since func 7 is zero,we add zero
+    addi t3 t3 0
+    #store the decompressed cmd to the address of a4
+    sw t3 0(a4)
     #return 
     jr ra
 cor_decompress:
+    #reset the tmp value to zero
+    li t0 0
+    li t1 0
+    li t2 0
+    li t3 0
+    li t4 0
+    li t5 0
+    li t6 0
+    #load value to t0 from the address of a4
+    lw t0 0(a4)
+    #right move t0 2 bit to get rs2'
+    srli t2 t0 2
+    #get the last 3 bit of t2 to have rs2'
+    andi t2 t2 0x7
+    #add 8 to t2  to change rs2' to rs2
+    addi t2 t2 8
+    #right move t0 7 bit to get rs1'
+    srli t1 t0 2
+    #get the last 3 bit of t2 to have rs1'
+    andi t1 t1 0x7
+    #add 8 to t1  to change rs1' to rs1
+    addi t1 t1 8
+    #add opcode to output cmd t3 ,opcode is 0x33
+    addi t3 t3 0x33
+    #left move t1 7 bit to get rd value
+    slli t1 t1 7
+    #add rd to output cmd
+    add t3 t3 t1
+    #add func3 to outputcmd t3,func3 is 0x6000
+    addi t3 t3 0x6000
+    #left move t1 8 bit more to get rs1 value 
+    slli t1 t1 8
+    #add rs1 value to output cmd t3
+    add t3 t3 t1
+    #left move t2 20 bit to get rs2
+    slli t2 t2 20
+    #add  rs2 to the output cmd
+    add t3 t3 t2
+    #add func7 to output cmd ,since func 7 is zero,we add zero
+    addi t3 t3 0
+    #store the decompressed cmd to the address of a4
+    sw t3 0(a4)
     #return
     jr ra
 cxor_decompress:
+    #reset the tmp value to zero
+    li t0 0
+    li t1 0
+    li t2 0
+    li t3 0
+    li t4 0
+    li t5 0
+    li t6 0
+    #load value to t0 from the address of a4
+    lw t0 0(a4)
+    #right move t0 2 bit to get rs2'
+    srli t2 t0 2
+    #get the last 3 bit of t2 to have rs2'
+    andi t2 t2 0x7
+    #add 8 to t2  to change rs2' to rs2
+    addi t2 t2 8
+    #right move t0 7 bit to get rs1'
+    srli t1 t0 2
+    #get the last 3 bit of t2 to have rs1'
+    andi t1 t1 0x7
+    #add 8 to t1  to change rs1' to rs1
+    addi t1 t1 8
+    #add opcode to output cmd t3 ,opcode is 0x33
+    addi t3 t3 0x33
+    #left move t1 7 bit to get rd value
+    slli t1 t1 7
+    #add rd to output cmd
+    add t3 t3 t1
+    #add func3 to outputcmd t3,func3 is 0x4000
+    addi t3 t3 0x4000
+    #left move t1 8 bit more to get rs1 value 
+    slli t1 t1 8
+    #add rs1 value to output cmd t3
+    add t3 t3 t1
+    #left move t2 20 bit to get rs2
+    slli t2 t2 20
+    #add  rs2 to the output cmd
+    add t3 t3 t2
+    #add func7 to output cmd ,since func 7 is zero,we add zero
+    addi t3 t3 0
+    #store the decompressed cmd to the address of a4
+    sw t3 0(a4)
     #return
     jr ra
 csub_decompress:
-    #return 
+        #reset the tmp value to zero
+    li t0 0
+    li t1 0
+    li t2 0
+    li t3 0
+    li t4 0
+    li t5 0
+    li t6 0
+    #load value to t0 from the address of a4
+    lw t0 0(a4)
+    #right move t0 2 bit to get rs2'
+    srli t2 t0 2
+    #get the last 3 bit of t2 to have rs2'
+    andi t2 t2 0x7
+    #add 8 to t2  to change rs2' to rs2
+    addi t2 t2 8
+    #right move t0 7 bit to get rs1'
+    srli t1 t0 2
+    #get the last 3 bit of t2 to have rs1'
+    andi t1 t1 0x7
+    #add 8 to t1  to change rs1' to rs1
+    addi t1 t1 8
+    #add opcode to output cmd t3 ,opcode is 0x33
+    addi t3 t3 0x33
+    #left move t1 7 bit to get rd value
+    slli t1 t1 7
+    #add rd to output cmd
+    add t3 t3 t1
+    #add func3 to outputcmd t3,func3 is 0x0000
+    addi t3 t3 0x0000
+    #left move t1 8 bit more to get rs1 value 
+    slli t1 t1 8
+    #add rs1 value to output cmd t3
+    add t3 t3 t1
+    #left move t2 20 bit to get rs2
+    slli t2 t2 20
+    #add  rs2 to the output cmd
+    add t3 t3 t2
+    #add func7 to output cmd ,since func 7 is 0x40000000,we add 0x40000000
+    addi t3 t3 0x40000000
+    #store the decompressed cmd to the address of a4
+    sw t3 0(a4)
+    #return
     jr ra
 
 cjal_cj_decompress:
