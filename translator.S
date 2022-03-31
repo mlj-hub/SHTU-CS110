@@ -166,6 +166,10 @@ check_type:
     loop_check_type:
         # /if i== len num , return
         beq t0,a1,return_check_type
+        # get one word on the stack
+        addi sp,sp,-4
+        # store t0 into stack
+        sw t0,0(sp)
         # move state array one word forward
         addi a3,a3,4
         # move data array one word forward
@@ -430,6 +434,10 @@ b_j_check_32:
 
 
 continue_check_type:
+    # load back t0
+    lw t0,0(sp)
+    # reset stack
+    addi sp,sp,4
     # i++
     addi t0,t0,1
     # continue loop
