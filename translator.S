@@ -914,8 +914,12 @@ csw_decompress:
     slli t6 t6 9
     #add offser[4:2] to imm[4:0]
     add t5 t5 t6
+    #give the func3 value to t0 
+    li t0 0x2
+    #left move li 12 bit to have the func3 of output
+    slli t0 t0 12
     #add func3 to output cmd ,the output cmd is 
-    addi t5 t5 0x2000
+    add t5 t5 t0
     #left move t4 25 bit to add offset[6:5] to output cmd
     slli t4 t4 25
     #add offset[6:5] to output cmd
@@ -961,8 +965,12 @@ cand_decompress:
     slli t1 t1 7
     #add rd to output cmd
     add t3 t3 t1
-    #add func3 to outputcmd t3,func3 is  0x7000
-    addi t3 t3 0x7000
+    #give the func3 value to t0
+    li t0 7
+    #left move t0 12 bit to have the func3 of output
+    slli t0 t0 12
+    #add func3 to outputcmd t3
+    add t3 t3 t0
     #left move t1 8 bit more to get rs1 value 
     slli t1 t1 8
     #add rs1 value to output cmd t3
@@ -1006,8 +1014,12 @@ cor_decompress:
     slli t1 t1 7
     #add rd to output cmd
     add t3 t3 t1
+    #give the func3 value to t0
+    li t0 6
+    #left move t0 12 bit to have the func3 of output
+    slli t0 t0 12
     #add func3 to outputcmd t3,func3 is 0x6000
-    addi t3 t3 0x6000
+    add t3 t3 t0
     #left move t1 8 bit more to get rs1 value 
     slli t1 t1 8
     #add rs1 value to output cmd t3
@@ -1051,8 +1063,12 @@ cxor_decompress:
     slli t1 t1 7
     #add rd to output cmd
     add t3 t3 t1
+    #give the func3 value to t0
+    li t0 4
+    #left move t0 12 bit to have the func3 of output
+    slli t0 t0 12
     #add func3 to outputcmd t3,func3 is 0x4000
-    addi t3 t3 0x4000
+    add t3 t3 t0
     #left move t1 8 bit more to get rs1 value 
     slli t1 t1 8
     #add rs1 value to output cmd t3
@@ -1106,8 +1122,12 @@ csub_decompress:
     slli t2 t2 20
     #add  rs2 to the output cmd
     add t3 t3 t2
+    #give the func7 value to t0
+    li t0 1
+    #left move t0 30 bit to have the func7 of output
+    slli t0 t0 30
     #add func7 to output cmd ,since func 7 is 0x40000000,we add 0x40000000
-    addi t3 t3 0x40000000
+    add t3 t3 t0
     #store the decompressed cmd to the address of a4
     sw t3 0(a4)
     #return
@@ -1141,8 +1161,12 @@ csrli_decompress:
     slli t2 t2 7
     #add the rd to the output cmd
     add t4 t4 t2
+    #give the func3 value to t0
+    li t0 5
+    #left move t0 12 bit to have the func3 of output
+    slli t0 t0 12
     #add func3 to the output cmd,func3 is 0x5000
-    addi t4 t4 0x5000
+    add t4 t4 t0
     #left move rd 8 bit more to get the rs1 of the output cmd
     slli t2 t2 8
     #add the rs1 to the output cmd
@@ -1189,8 +1213,12 @@ csrai_decompress:
     slli t2 t2 7
     #add the rd to the output cmd
     add t4 t4 t2
+    #give the func3 value to t0
+    li t0 5
+    #left move t0 12 bit to have the func3 of output
+    slli t0 t0 12
     #add func3 to the output cmd,func3 is 0x5000
-    addi t4 t4 0x5000
+    add t4 t4 t0
     #left move rd 8 bit more to get the rs1 of the output cmd
     slli t2 t2 8
     #add the rs1 to the output cmd
@@ -1203,8 +1231,12 @@ csrai_decompress:
     slli t3 t3 25
     #add the shamt[5] to the output cmd
     add t4 t4 t3
+    #give the func7 value to t0
+    li t0 1
+    #left move t0 30 bit to have the func7 of output
+    slli t0 t0 30
     #add func7 to the output cmd,func7 is 0x40000000
-    addi t4 t4 0x40000000
+    add t4 t4 t0
     #store the output cmd to the address of the a4
     sw t4 0(a4)
     #return
@@ -1238,8 +1270,12 @@ candi_decompress:
     slli t2 t2 7
     #add the rd to the output cmd
     add t4 t4 t2
+    #give the func3 value to t0
+    li t0 7
+    #left move t0 12 bit to have the func3 of output
+    slli t0 t0 12
     #add func3 to the output cmd,func3 is 0x7000
-    addi t4 t4 0x7000
+    add t4 t4 t0
     #left move rd 8 bit more to get the rs1 of the output cmd
     slli t2 t2 8
     #add the rs1 to the output cmd
