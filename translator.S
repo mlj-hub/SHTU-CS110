@@ -793,7 +793,7 @@ cslli_decompress:
     sw t4 0(a4)
     #return 
     jr ra
-csw_decompress:
+clw_decompress:
     #reset the tmp value to zero
     li t0 0
     li t1 0
@@ -822,11 +822,120 @@ csw_decompress:
     srli t3 t0 7
     #get the last 3 bit of t3 to get rs1'
     andi t3 t3 0x7
+    #add 8 to rs1' to change it into rd
+    addi t3 t3 8
     #right move t0 5 bit to get offset[5:3]
     srli t4 t0 10
-    #get the last 3 bit of t6 to get offset[5:3s]
+    #get the last 3 bit of t6 to get offset[5:3]
     andi t4 t4 0x7
 
+    #add opcode to the output cmd,the opcode of lw is 0x03
+    addi t5 t5 0x3
+    #left move rd 7 bit to get rd of output cmd
+    slli t1 t1 7
+    #add rd to the output cmd
+    add t5 t5 t1
+    #give func3 value to the t0
+    li t0 0x2
+    #left move func3 12 bit to have func3 of the output cmd
+    slli t0 t0 12
+    #add func3 value to output cmd 
+    add t5 t5 t0 
+    #left move rs1 15 bit to have rs1 of the output cmd
+    slli t1 t1 15
+    #add rs1 to output cmd 
+    add t5 t5 t1
+    #left move offset[2] 22 bit to get offset[2] in output cmd 
+    slli t6 t6 22
+    #add offset[2] to output cmd
+    add t5 t5 t6
+    #left move offset[5:3] 23 bit to get offset[2] in output cmd 
+    slli t4 t4 23
+    #add offset[5:3] to output cmd
+    add t5 t5 t4
+    #left move offset[6] 25 bit to get offset[2] in output cmd 
+    slli t6 t6 26
+    #add offset[6] to output cmd
+    add t5 t5 t6
+    #store the value to the address of the cmd
+    sw t5 0(a4)
+    #return 
+    jr ra
+csw_decompress:
+     #reset the tmp value to zero
+    li t0 0
+    li t1 0
+    li t2 0
+    li t3 0
+    li t4 0
+    li t5 0
+    li t6 0
+    #load value to t0 from the address of a4
+    lw t0 0(a4)
+    #right move t0 2 bit to get rs2' and store it in t1
+    srli t1 t0 2
+    #get the last 3 bit of t1 as rs2'
+    andi t1 t1 0x7
+    #add 8 to rd' to change it into rs2 
+    addi t1 t1 8
+    #right move t0  6 bit to get offset[2]
+    srli t2 t0 6
+    #get the last bit of t2 to get offset[2]
+    andi t2 t2 1
+    #right move t0 5 bit to get offset[6]
+    srli t6 t0 5
+    #get the last bit of t6 to get offset[6]
+    andi t6 t6 1
+    #right move t0 7 bit to get rs1'
+    srli t3 t0 7
+    #get the last 3 bit of t3 to get rs1'
+    andi t3 t3 0x7
+    #add 8 to rs1' to change it into rs1
+    addi t3 t3 8
+    #right move t0 5 bit to get offset[5:3]
+    srli t4 t0 10
+    #get the last 3 bit of t6 to get offset[5:3]
+    andi t4 t4 0x7
+    #add opcode to the output cmd,since the output cmd is 
+    addi t5 t5 0x23
+    #give the value of offset[2] to t0
+    mv t0 t2
+    #left move t4 1 bit to have offset[5:3]
+    slli t4 t4 1
+    #add offset[5:3] to t0
+    add t0 t0 t4
+    #left move t6 4 bit to have offset[6]
+    slli t6 t6 4
+    #add offset[6] to t0
+    add t0 t0 t6
+    #put offset[6:5] into t4
+    srli t4 t0 3
+    #put offset[4:2] into t6
+    andi t6 t0 3
+    #left move t6 9 bit to add it to the output cmd
+    slli t6 t6 9
+    #add offser[4:2] to imm[4:0]
+    add t5 t5 t6
+    #add func3 to output cmd ,the output cmd is 
+    addi t5 t5 0x2000
+    #left move t4 25 bit to add offset[6:5] to output cmd
+    slli t4 t4 25
+    #add offset[6:5] to output cmd
+    add t5 t5 t4
+    #store the output cmd into address a4
+    sw t5 0(a4)
+    #return 
+    jr ra
+cand_decompress:
+    #return 
+    jr ra
+cor_decompress:
+    #return
+    jr ra
+cxor_decompress:
+    #return
+    jr ra
+csub_decompress:
     #return 
     jr ra
 # codes above is used to decompress the data in a4
