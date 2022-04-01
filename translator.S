@@ -372,7 +372,7 @@ check_10:
         # right shift the cmd by 12 to get the highest byte
         srli t2,t1,12
         # and t2 with 0x1 to get the lowest bit
-        andi t2,t1,0x1
+        andi t2,t2,0x1
         # /if 13rd bit is 0, the cmd is cjr
         beqz t2,cjr
         # /else, the cmd is cjalr, call cjalr decompress
