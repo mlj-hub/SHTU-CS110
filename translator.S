@@ -854,9 +854,9 @@ clw_decompress:
     #add func3 value to output cmd 
     add t5 t5 t0 
     #left move rs1 15 bit to have rs1 of the output cmd
-    slli t1 t1 15
+    slli t3 t3 15
     #add rs1 to output cmd 
-    add t5 t5 t1
+    add t5 t5 t3
     #left move offset[2] 22 bit to get offset[2] in output cmd 
     slli t6 t6 22
     #add offset[2] to output cmd
