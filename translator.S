@@ -968,7 +968,7 @@ cand_decompress:
     #add 8 to t2  to change rs2' to rs2
     addi t2 t2 8
     #right move t0 7 bit to get rs1'
-    srli t1 t0 2
+    srli t1 t0 7
     # get the last 3 bit of t2 to have rs1'
     andi t1 t1 0x7
     #add 8 to t1  to change rs1' to rs1
@@ -1017,7 +1017,7 @@ cor_decompress:
     #add 8 to t2  to change rs2' to rs2
     addi t2 t2 8
     #right move t0 7 bit to get rs1'
-    srli t1 t0 2
+    srli t1 t0 7
     #get the last 3 bit of t2 to have rs1'
     andi t1 t1 0x7
     #add 8 to t1  to change rs1' to rs1
@@ -1066,7 +1066,7 @@ cxor_decompress:
     #add 8 to t2  to change rs2' to rs2
     addi t2 t2 8
     #right move t0 7 bit to get rs1'
-    srli t1 t0 2
+    srli t1 t0 7
     #get the last 3 bit of t2 to have rs1'
     andi t1 t1 0x7
     #add 8 to t1  to change rs1' to rs1
@@ -1115,7 +1115,7 @@ csub_decompress:
     #add 8 to t2  to change rs2' to rs2
     addi t2 t2 8
     #right move t0 7 bit to get rs1'
-    srli t1 t0 2
+    srli t1 t0 7
     #get the last 3 bit of t2 to have rs1'
     andi t1 t1 0x7
     #add 8 to t1  to change rs1' to rs1
