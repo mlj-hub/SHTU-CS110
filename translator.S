@@ -1396,7 +1396,7 @@ cjal_cj_decompress:
     # move t3 to get offset(10:1) its positon
     slli t3,t3,8
     # merge t3 into t4
-    or t4,t3,t3
+    or t4,t4,t3
     # get offset(20) into t3
     srli t3,t2,20
     # clear other bits 
