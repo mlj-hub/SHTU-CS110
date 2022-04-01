@@ -1161,10 +1161,12 @@ csrli_decompress:
     srli t1 t0 2
     #get the last 5 bit of t1 to get shamt[4:0]
     andi t1 t1 0x1f
-    #right move 7 bit to get rd
+    #right move 7 bit to get rd'
     srli t2 t0 7
     #get the last 3 bit of t2 to get rd
     andi t2 t2 0x07
+    #add 8 to change rd' into rd
+    addi t2 t2 8
     #right move 12 bit to get shamt[5]
     srli t3 t0 12
     #get the last bit of t3 to get shamt[5]
@@ -1217,6 +1219,8 @@ csrai_decompress:
     srli t2 t0 7
     #get the last 3 bit of t2 to get rd
     andi t2 t2 0x07
+    #add 8 to change rd' into rd
+    addi t2 t2 8
     #right move 12 bit to get shamt[5]
     srli t3 t0 12
     #get the last bit of t3 to get shamt[5]
@@ -1274,6 +1278,8 @@ candi_decompress:
     srli t2 t0 7
     #get the last 3 bit of t2 to get rd
     andi t2 t2 0x07
+    #add 8 to change rd' into rd
+    addi t2 t2 8
     #right move 12 bit to get shamt[5]
     srli t3 t0 12
     #get the last bit of t3 to get shamt[5]
