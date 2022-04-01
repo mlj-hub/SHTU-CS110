@@ -1497,7 +1497,7 @@ cbeqz_cbnez_decompress:
     # get offset(10:5) into t3
     andi t3,t2, 0x7e0
     # move t3 to get offset(10:5) into its position
-    slli t3,t3,5
+    srli t3,t3,5
     # merge t3 into t1
     or t1,t1,t3
     # get offset(12) and the signal bits into t3
@@ -1515,24 +1515,13 @@ cbeqz_cbnez_decompress:
     lw t1,0(a4)
     # get rs1 into t2
     # first shift the origin cmd to make lower bits zero
-    srli t2,t1,15
+    srli t2,t1,7
     # then, get rs1
-    andi t2,t2,0x1f
+    andi t2,t2,0x7
     # change the popular register into origin register by adding it by 8
     addi t2,t2,8
     # move t2 to make rs1 its position
     slli t2,t2,15
-    # merge t2 into t4
-    or t4,t4,t2
-    # get rs2 into t2
-    # first shift the origin cmd to make lower bits zero
-    srli t2,t1,20
-    # then, get rs1
-    andi t2,t2,0x1f
-    # change the popular register into origin register by adding it by 8
-    addi t2,t2,8
-    # move t2 to make rs1 its position
-    slli t2,t2,20
     # merge t2 into t4
     or t4,t4,t2
     # now t4 has no funct3
