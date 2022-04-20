@@ -143,25 +143,23 @@
       <circ-anchor facing="east" height="6" width="6" x="227" y="77"/>
     </appear>
     <wire from="(1200,150)" to="(1200,300)"/>
-    <wire from="(230,410)" to="(230,420)"/>
     <wire from="(220,100)" to="(220,140)"/>
-    <wire from="(20,410)" to="(230,410)"/>
     <wire from="(130,310)" to="(240,310)"/>
     <wire from="(130,370)" to="(240,370)"/>
     <wire from="(220,180)" to="(220,230)"/>
     <wire from="(1000,150)" to="(1000,210)"/>
-    <wire from="(220,420)" to="(230,420)"/>
     <wire from="(20,100)" to="(20,410)"/>
     <wire from="(980,230)" to="(1020,230)"/>
     <wire from="(220,270)" to="(220,290)"/>
     <wire from="(1000,150)" to="(1200,150)"/>
     <wire from="(1000,300)" to="(1200,300)"/>
     <wire from="(220,330)" to="(220,350)"/>
+    <wire from="(220,390)" to="(220,410)"/>
     <wire from="(20,100)" to="(220,100)"/>
+    <wire from="(20,410)" to="(220,410)"/>
     <wire from="(200,250)" to="(240,250)"/>
     <wire from="(200,160)" to="(240,160)"/>
     <wire from="(1000,250)" to="(1000,300)"/>
-    <wire from="(220,390)" to="(220,420)"/>
     <comp lib="0" loc="(200,250)" name="Pin">
       <a name="width" val="32"/>
       <a name="label" val="WriteData"/>
@@ -188,7 +186,7 @@
     </comp>
     <comp lib="0" loc="(240,250)" name="Tunnel">
       <a name="width" val="32"/>
-      <a name="label" val="B"/>
+      <a name="label" val="WriteData"/>
     </comp>
     <comp lib="0" loc="(240,310)" name="Tunnel">
       <a name="label" val="MemRW"/>
