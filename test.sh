@@ -9,5 +9,5 @@ cp regfile.circ tests/regfile_tests
 cd tests
 rm -rf student_output
 mkdir student_output
-./test.py
+python3 ./test.py
 cd ..
