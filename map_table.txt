@@ -16,7 +16,8 @@ SB      Reg(00)
 UJ      PC+4(10)
 
 
-PCsel  +4(0)   ALU(1)
+PCsel  +4(0)    ALU(1)
+BrUn   Sign(0)  Unsign(1)
 
 ALUsel     Type
 0000       Add
