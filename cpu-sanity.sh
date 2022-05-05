@@ -8,5 +8,5 @@ cp alu.circ tests/circ_files
 cp regfile.circ tests/circ_files
 cp cpu.circ tests/circ_files
 cd tests/circ_files
-./sanity_test.py
+python3 ./sanity_test.py
 cd ../..
