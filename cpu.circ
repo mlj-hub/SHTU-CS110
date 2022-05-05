@@ -4,49 +4,18 @@
 
   <lib desc="#Wiring" name="0">
     <tool name="Splitter">
-      <a name="facing" val="west"/>
-      <a name="incoming" val="32"/>
+      <a name="fanout" val="4"/>
+      <a name="incoming" val="4"/>
       <a name="appear" val="center"/>
-      <a name="bit1" val="0"/>
-      <a name="bit2" val="0"/>
-      <a name="bit3" val="0"/>
-      <a name="bit4" val="0"/>
-      <a name="bit5" val="0"/>
-      <a name="bit6" val="0"/>
-      <a name="bit7" val="0"/>
-      <a name="bit8" val="0"/>
-      <a name="bit9" val="0"/>
-      <a name="bit10" val="0"/>
-      <a name="bit11" val="0"/>
-      <a name="bit12" val="0"/>
-      <a name="bit13" val="0"/>
-      <a name="bit14" val="0"/>
-      <a name="bit15" val="0"/>
-      <a name="bit16" val="1"/>
-      <a name="bit17" val="1"/>
-      <a name="bit18" val="1"/>
-      <a name="bit19" val="1"/>
-      <a name="bit20" val="1"/>
-      <a name="bit21" val="1"/>
-      <a name="bit22" val="1"/>
-      <a name="bit23" val="1"/>
-      <a name="bit24" val="1"/>
-      <a name="bit25" val="1"/>
-      <a name="bit26" val="1"/>
-      <a name="bit27" val="1"/>
-      <a name="bit28" val="1"/>
-      <a name="bit29" val="1"/>
-      <a name="bit30" val="1"/>
-      <a name="bit31" val="1"/>
     </tool>
     <tool name="Pin">
       <a name="facing" val="north"/>
     </tool>
     <tool name="Probe">
-      <a name="radix" val="10signed"/>
+      <a name="radix" val="16"/>
     </tool>
     <tool name="Tunnel">
-      <a name="width" val="32"/>
+      <a name="width" val="2"/>
     </tool>
     <tool name="Pull Resistor">
       <a name="facing" val="north"/>
@@ -55,7 +24,8 @@
       <a name="facing" val="north"/>
     </tool>
     <tool name="Constant">
-      <a name="value" val="0x0"/>
+      <a name="width" val="8"/>
+      <a name="value" val="0xff"/>
     </tool>
     <tool name="Bit Extender">
       <a name="in_width" val="32"/>
@@ -358,6 +328,7 @@
     <wire from="(1680,480)" to="(1710,480)"/>
     <wire from="(100,470)" to="(170,470)"/>
     <wire from="(1150,400)" to="(1170,400)"/>
+    <wire from="(520,170)" to="(590,170)"/>
     <wire from="(1750,190)" to="(1790,190)"/>
     <wire from="(780,410)" to="(830,410)"/>
     <wire from="(380,240)" to="(380,310)"/>
@@ -380,7 +351,6 @@
     <wire from="(1000,740)" to="(1020,740)"/>
     <wire from="(990,770)" to="(1010,770)"/>
     <wire from="(1460,170)" to="(1460,220)"/>
-    <wire from="(520,170)" to="(550,170)"/>
     <wire from="(310,640)" to="(340,640)"/>
     <wire from="(710,440)" to="(740,440)"/>
     <wire from="(770,620)" to="(800,620)"/>
@@ -828,7 +798,7 @@
       <a name="addrWidth" val="14"/>
       <a name="dataWidth" val="32"/>
       <a name="contents">addr/data: 14 32
-c000ef fff00413 80006f 8067 fff00513
+3100293 fec00313 18000393 27284b3 2629533
 </a>
     </comp>
     <comp lib="0" loc="(1790,640)" name="Tunnel">
@@ -934,15 +904,15 @@ c000ef fff00413 80006f 8067 fff00513
       <a name="width" val="32"/>
       <a name="value" val="0x4"/>
     </comp>
-    <comp lib="0" loc="(550,170)" name="Tunnel">
-      <a name="width" val="32"/>
-      <a name="label" val="INSTRUCTION"/>
-    </comp>
     <comp lib="0" loc="(550,270)" name="Tunnel">
       <a name="label" val="clk"/>
     </comp>
     <comp lib="0" loc="(510,270)" name="Pin">
       <a name="label" val="CLOCK"/>
+    </comp>
+    <comp lib="0" loc="(550,880)" name="Tunnel">
+      <a name="width" val="32"/>
+      <a name="label" val="INSTRUCTION"/>
     </comp>
   </circuit>
   <circuit name="controller">
@@ -972,14 +942,14 @@ c000ef fff00413 80006f 8067 fff00513
       <rect height="4" stroke="none" width="10" x="230" y="198"/>
       <text fill="#404040" font-family="Courier 10 Pitch" font-size="12" text-anchor="end" x="225" y="204">WBsel</text>
       <circ-port height="10" pin="650,810" width="10" x="235" y="165"/>
-      <circ-port height="10" pin="500,790" width="10" x="235" y="135"/>
       <circ-port height="10" pin="1140,630" width="10" x="235" y="75"/>
-      <circ-port height="10" pin="1480,960" width="10" x="235" y="195"/>
       <circ-port height="10" pin="1970,710" width="10" x="235" y="105"/>
-      <circ-port height="8" pin="240,390" width="8" x="46" y="156"/>
       <circ-port height="8" pin="240,440" width="8" x="46" y="186"/>
-      <circ-port height="8" pin="200,280" width="8" x="46" y="126"/>
       <circ-port height="10" pin="1040,80" width="10" x="235" y="45"/>
+      <circ-port height="8" pin="200,280" width="8" x="46" y="126"/>
+      <circ-port height="8" pin="240,390" width="8" x="46" y="156"/>
+      <circ-port height="10" pin="1480,960" width="10" x="235" y="195"/>
+      <circ-port height="10" pin="500,790" width="10" x="235" y="135"/>
       <rect height="3" stroke="none" width="10" x="230" y="229"/>
       <circ-port height="10" pin="1000,970" width="10" x="235" y="225"/>
       <text fill="#404040" font-family="Courier 10 Pitch" font-size="12" text-anchor="end" x="225" y="234">RegWEn</text>
@@ -1315,10 +1285,10 @@ c000ef fff00413 80006f 8067 fff00513
       <a name="bit22" val="none"/>
       <a name="bit23" val="none"/>
       <a name="bit24" val="none"/>
-      <a name="bit25" val="none"/>
+      <a name="bit25" val="2"/>
       <a name="bit26" val="none"/>
       <a name="bit27" val="none"/>
-      <a name="bit28" val="2"/>
+      <a name="bit28" val="none"/>
       <a name="bit29" val="none"/>
       <a name="bit30" val="3"/>
       <a name="bit31" val="none"/>
@@ -1998,10 +1968,10 @@ c000ef fff00413 80006f 8067 fff00513
       <rect height="3" stroke="none" width="10" x="240" y="159"/>
       <text fill="#404040" font-family="Courier 10 Pitch" font-size="12" text-anchor="end" x="235" y="164">BrEq</text>
       <rect height="3" stroke="none" width="10" x="240" y="189"/>
-      <circ-port height="10" pin="680,360" width="10" x="245" y="185"/>
       <circ-port height="10" pin="620,240" width="10" x="245" y="155"/>
-      <circ-port height="8" pin="620,430" width="8" x="126" y="216"/>
       <circ-port height="8" pin="320,350" width="8" x="126" y="186"/>
+      <circ-port height="8" pin="620,430" width="8" x="126" y="216"/>
+      <circ-port height="10" pin="680,360" width="10" x="245" y="185"/>
       <circ-port height="8" pin="320,230" width="8" x="126" y="156"/>
       <text fill="#404040" font-family="Courier 10 Pitch" font-size="12" text-anchor="end" x="235" y="194">BrLt</text>
       <rect fill="none" height="97" stroke="#000000" stroke-width="2" width="100" x="140" y="150"/>
@@ -2122,8 +2092,8 @@ c000ef fff00413 80006f 8067 fff00513
       <rect height="4" stroke="none" width="10" x="200" y="58"/>
       <text fill="#404040" font-family="Courier 10 Pitch" font-size="12" text-anchor="end" x="195" y="64">IMM</text>
       <circ-port height="10" pin="660,490" width="10" x="205" y="55"/>
-      <circ-port height="8" pin="240,150" width="8" x="46" y="56"/>
       <circ-port height="8" pin="520,570" width="8" x="46" y="86"/>
+      <circ-port height="8" pin="240,150" width="8" x="46" y="56"/>
       <rect fill="none" height="60" stroke="#000000" stroke-width="2" width="140" x="60" y="50"/>
       <text fill="#030303" font-family="Courier 10 Pitch" font-size="14" font-weight="bold" text-anchor="middle" x="139" y="81">IMM_generater</text>
       <circ-anchor facing="east" height="6" width="6" x="207" y="57"/>
