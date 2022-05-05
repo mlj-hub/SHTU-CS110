@@ -910,7 +910,7 @@
     <comp lib="0" loc="(510,270)" name="Pin">
       <a name="label" val="CLOCK"/>
     </comp>
-    <comp lib="0" loc="(550,880)" name="Tunnel">
+    <comp lib="0" loc="(590,170)" name="Tunnel">
       <a name="width" val="32"/>
       <a name="label" val="INSTRUCTION"/>
     </comp>
