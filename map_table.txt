@@ -1,10 +1,10 @@
 type	IMM_sel	     MemRW       Bsel 	      Asel
-R	000	     R(0)        Rs1(0)       Reg(0)
-I	001          R(0)        Imm(1)       Reg(0)
-U	010          R(0)        Imm(1)       auipc:PC(1),lui:Reg(0)
-S	011          W(1)        Imm(1)       Reg(0)
-SB	100          R(0)        Imm(1)       PC(1)
-UJ	101          R(0)        Imm(1)       PC(1)
+R	    000	         R(0)        Rs1(0)       Reg(0)
+I	    001          R(0)        Imm(1)       Reg(0)
+U	    010          R(0)        Imm(1)       auipc:PC(1),lui:Reg(0)
+S	    011          W(1)        Imm(1)       Reg(0)
+SB	    100          R(0)        Imm(1)       PC(1)
+UJ	    101          R(0)        Imm(1)       PC(1)
 
 
 type    WBsel
@@ -30,6 +30,7 @@ ALUsel     Type
 0111       And
 1000       Mult
 1001       Mulh
+1010       B
 1011       Mulhu
 1100       Div
 1101       Divu
