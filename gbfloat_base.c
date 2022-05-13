@@ -123,7 +123,7 @@ Image gb_h(Image a, FVec gv)
     int offset;
     unsigned int x, y, channel;
     float *pc;
-    double sum;
+    float sum;
     int i;
     for (channel = 0; channel < a.numChannels; channel++)
     {
@@ -140,7 +140,7 @@ Image gb_h(Image a, FVec gv)
                     offset = i - ext;
                     sum += gv.data[i]/gv.sum[ext - deta] * (float)get_pixel(a, x + offset, y)[channel];
                 }
-                pc[channel] = (float)sum;
+                pc[channel] = sum;
             }
         }
     }
@@ -156,7 +156,7 @@ Image gb_v(Image a, FVec gv)
     int offset;
     unsigned int x, y, channel;
     float* pc;
-    double sum;
+    float sum;
     int i;
     for (channel = 0; channel < a.numChannels; channel++)
     {
@@ -173,7 +173,7 @@ Image gb_v(Image a, FVec gv)
                     offset = i - ext;
                     sum += gv.data[i] /gv.sum[ext - deta] * (float)get_pixel(a, x, y + offset)[channel];
                 }
-                pc[channel] = (float)sum;
+                pc[channel] = sum;
             }
         }
     }
