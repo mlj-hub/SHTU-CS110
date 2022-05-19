@@ -103,7 +103,6 @@ FVec make_gv(float a, float x0, float x1, unsigned int length, unsigned int min_
     // multi threads 
 
     double temp = sqrt(2 * PI);
-    __m256 data = _mm256_setzero_ps();
     __m256 c_temp = _mm256_set1_ps(temp);
     int max_threads = omp_get_max_threads();
     omp_set_num_threads(max_threads);
@@ -113,7 +112,7 @@ FVec make_gv(float a, float x0, float x1, unsigned int length, unsigned int min_
         o_gd(a,(i+5-offset)*step),o_gd(a,(i+4-offset)*step),\
         o_gd(a,(i+3-offset)*step),o_gd(a,(i+2-offset)*step),\
         o_gd(a,(i+1-offset)*step),o_gd(a,(i-offset)*step));
-        data = _mm256_div_ps(opt1,c_temp);
+        __m256 data  = _mm256_div_ps(opt1,c_temp);
         _mm256_store_ps(v.data+i,data);
         // v.data[i] = gd(a, 0.0f, (i-offset)*step,temp);
     }
