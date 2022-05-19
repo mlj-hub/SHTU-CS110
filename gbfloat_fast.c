@@ -6,7 +6,7 @@
 #include <time.h>
 #include <immintrin.h>
 #include <omp.h>
-#include <emmintrin.h>
+// #include <emmintrin.h>
 #include <immintrin.h>
 //inplement dymanic
 

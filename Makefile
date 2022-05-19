@@ -1,6 +1,6 @@
 CC = gcc-9
 CFLAGS = -O2 -fopenmp -pthread
-LIBS = -lm -mavx
+LIBS = -lm -mavx -mavx2
 all : base_test fast_test check_test
 
 clean:
