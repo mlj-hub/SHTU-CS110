@@ -5,6 +5,9 @@
 #include <sys/time.h>
 #include <time.h>
 #include <immintrin.h>
+#include <omp.h>
+#include <emmintrin.h>
+#include <immintrin.h>
 //inplement dymanic
 
 #define STB_IMAGE_IMPLEMENTATION
@@ -68,12 +71,18 @@ float* get_pixel(Image img, int x, int y)
     return img.data + img.numChannels * (y * img.dimX + x);
 }
 
-float gd(float a, float b, float x)
+float gd(float a, float b, float x,double temp)
 {
     float c = (x-b) / a;
-    return exp((-.5) * c * c) / (a * sqrt(2 * PI));
+    return exp((-.5) * c * c) / (a * temp);
 }
 
+float o_gd(float a, float x){
+    float c = x / a;
+    return exp((-.5) * c * c) / a;
+}
+
+/*can be optimised*/
 FVec make_gv(float a, float x0, float x1, unsigned int length, unsigned int min_length)
 {
     FVec v;
@@ -89,9 +98,26 @@ FVec make_gv(float a, float x0, float x1, unsigned int length, unsigned int min_
     float step = (x1 - x0) / ((float)length);
     int offset = length/2;
 
-    for (int i = 0; i < length; i++)
-    {
-        v.data[i] = gd(a, 0.0f, (i-offset)*step);
+    // multi threads 
+
+    double temp = sqrt(2 * PI);
+    __m256 data = _mm256_setzero_ps();
+    __m256 c_temp = _mm256_set1_ps(temp);
+    int max_threads = omp_get_max_threads();
+    omp_set_num_threads(max_threads);
+    #pragma omp parallel for
+    for (int i = 0; i < length/8*8; i+=8){
+        __m256 opt1 = _mm256_set_ps(o_gd(a,(i+7-offset)*step),o_gd(a,(i+6-offset)*step),\
+        o_gd(a,(i+5-offset)*step),o_gd(a,(i+4-offset)*step),\
+        o_gd(a,(i+3-offset)*step),o_gd(a,(i+2-offset)*step),\
+        o_gd(a,(i+1-offset)*step),o_gd(a,(i-offset)*step));
+        data = _mm256_div_ps(opt1,c_temp);
+        _mm256_store_ps(v.data+i,data);
+        // v.data[i] = gd(a, 0.0f, (i-offset)*step,temp);
+    }
+    
+    for(int i=length/8*8;i<length;++i){
+        v.data[i] = gd(a, 0.0f, (i-offset)*step,temp);
     }
     normalize_FVec(v);
     return v;
