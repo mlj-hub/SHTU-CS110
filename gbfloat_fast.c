@@ -18,6 +18,8 @@
 
 #define PI 3.14159
 
+#define BLOCK_SIZE 32
+
 typedef struct FVec
 {
     unsigned int length;
@@ -151,22 +153,51 @@ Image gb_h(Image a, FVec gv)
     float *pc;
     float sum;
     int i;
+    int max_threads = omp_get_max_threads();
+    omp_set_num_threads(max_threads);
+    # pragma omp parallel for
+    // for (channel = 0; channel < a.numChannels; channel++)
+    // {
+    //     for (x = 0; x < a.dimX; ++x)
+    //     {
+    //         for (y = 0; y < a.dimY; ++y)
+    //         {
+    //             pc = get_pixel(b, x, y);
+    //             unsigned int deta = fmin(fmin(a.dimY-y-1, y),fmin(a.dimX-x-1, x));
+    //             deta = fmin(deta, gv.min_deta);
+    //             sum = 0;
+    //             for (i = deta; i < gv.length-deta; ++i)
+    //             {
+    //                 offset = i - ext;
+    //                 sum += gv.data[i]/gv.sum[ext - deta] * (float)get_pixel(a, x + offset, y)[channel];
+    //             }
+    //             pc[channel] = sum;
+    //         }
+    //     }
+    // }
+
     for (channel = 0; channel < a.numChannels; channel++)
     {
-        for (x = 0; x < a.dimX; x++)
+        for (x = 0; x < a.dimX; x+=BLOCK_SIZE)
         {
-            for (y = 0; y < a.dimY; y++)
+            for (y = 0; y < a.dimY; y+=BLOCK_SIZE)
             {
-                pc = get_pixel(b, x, y);
-                unsigned int deta = fmin(fmin(a.dimY-y-1, y),fmin(a.dimX-x-1, x));
-                deta = fmin(deta, gv.min_deta);
-                sum = 0;
-                for (i = deta; i < gv.length-deta; i++)
+                for(int X=x;X<x+BLOCK_SIZE&&X<a.dimX;++X)
                 {
-                    offset = i - ext;
-                    sum += gv.data[i]/gv.sum[ext - deta] * (float)get_pixel(a, x + offset, y)[channel];
+                    for(int Y=y;Y<y+BLOCK_SIZE&&Y<a.dimY;++Y)
+                    {
+                        pc = get_pixel(b, X, Y);
+                        unsigned int deta = fmin(fmin(a.dimY-Y-1, Y),fmin(a.dimX-X-1, X));
+                        deta = fmin(deta, gv.min_deta);
+                        sum = 0;
+                        for (i = deta; i < gv.length-deta; ++i)
+                        {
+                            offset = i - ext;
+                            sum += gv.data[i]/gv.sum[ext - deta] * (float)get_pixel(a, X + offset, Y)[channel];
+                        }
+                        pc[channel] = sum;
+                    }
                 }
-                pc[channel] = sum;
             }
         }
     }
@@ -184,22 +215,51 @@ Image gb_v(Image a, FVec gv)
     float* pc;
     float sum;
     int i;
+    int max_threads = omp_get_max_threads();
+    omp_set_num_threads(max_threads);
+    # pragma omp parallel for
+    // for (channel = 0; channel < a.numChannels; channel++)
+    // {
+    //     for (x = 0; x < a.dimX; ++x)
+    //     {
+    //         for (y = 0; y < a.dimY; ++y)
+    //         {
+    //             pc = get_pixel(b, x, y);
+    //             unsigned int deta = fmin(fmin(a.dimY-y-1, y),fmin(a.dimX-x-1, x));
+    //             deta = fmin(deta, gv.min_deta);
+    //             sum = 0;
+    //             for (i = deta; i < gv.length-deta; ++i)
+    //             {
+    //                 offset = i - ext;
+    //                 sum =sum+ gv.data[i] /gv.sum[ext - deta] * (float)get_pixel(a, x, y + offset)[channel];
+    //             }
+    //             pc[channel] = sum;
+    //         }
+    //     }
+    // }
+
     for (channel = 0; channel < a.numChannels; channel++)
     {
-        for (x = 0; x < a.dimX; x++)
+        for (x = 0; x < a.dimX; x+=BLOCK_SIZE)
         {
-            for (y = 0; y < a.dimY; y++)
+            for (y = 0; y < a.dimY; y+=BLOCK_SIZE)
             {
-                pc = get_pixel(b, x, y);
-                unsigned int deta = fmin(fmin(a.dimY-y-1, y),fmin(a.dimX-x-1, x));
-                deta = fmin(deta, gv.min_deta);
-                sum = 0;
-                for (i = deta; i < gv.length-deta; i++)
+                for(int X=x;X<x+BLOCK_SIZE&&X<a.dimX;++X)
                 {
-                    offset = i - ext;
-                    sum += gv.data[i] /gv.sum[ext - deta] * (float)get_pixel(a, x, y + offset)[channel];
+                    for(int Y=y;Y<y+BLOCK_SIZE&&Y<a.dimY;++Y)
+                    {
+                        pc = get_pixel(b, X, Y);
+                        unsigned int deta = fmin(fmin(a.dimY-Y-1, Y),fmin(a.dimX-X-1, X));
+                        deta = fmin(deta, gv.min_deta);
+                        sum = 0;
+                        for (i = deta; i < gv.length-deta; ++i)
+                        {
+                            offset = i - ext;
+                            sum =sum+ gv.data[i] /gv.sum[ext - deta] * (float)get_pixel(a, X, Y + offset)[channel];
+                        }
+                        pc[channel] = sum;
+                    }
                 }
-                pc[channel] = sum;
             }
         }
     }
