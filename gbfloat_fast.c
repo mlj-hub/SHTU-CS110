@@ -194,29 +194,29 @@ Image gb_h(Image a, FVec gv)
             deta = fmin(deta, gv.min_deta);
             float Sum[3] = {0,0,0};
             int offset;
-
+            float s_data = gv.sum[ext - deta];
             for(int i = deta;i<deta/4*4+4;++i){
                 offset = i - ext;
-                Sum[0] += gv.data[i]/gv.sum[ext - deta] * (float)get_pixel(a, x + offset, y)[0];
-                Sum[1] += gv.data[i]/gv.sum[ext - deta] * (float)get_pixel(a, x + offset, y)[1];
-                Sum[2] += gv.data[i]/gv.sum[ext - deta] * (float)get_pixel(a, x + offset, y)[2];
+                float data = gv.data[i];
+                float * add = get_pixel(a, x + offset, y);
+                Sum[0] += data * add[0];
+                Sum[1] += data * add[1];
+                Sum[2] += data * add[2];
             }
 
             for (int i = deta/4*4+4; i < (gv.length-deta)/4*4; i+=4)
             {
                 offset = i - ext;
 
-                float data = gv.sum[ext - deta];
-
                 float * add1 = get_pixel(a, x + offset, y);
                 float * add2 = get_pixel(a, x + offset+1, y);
                 float * add3 = get_pixel(a, x + offset+2, y);
                 float * add4 = get_pixel(a, x + offset+3, y);
 
-                float opt1 = gv.data[i]/data;
-                float opt2 = gv.data[i+1]/data;
-                float opt3 = gv.data[i+2]/data;
-                float opt4 = gv.data[i+3]/data;
+                float opt1 = gv.data[i];
+                float opt2 = gv.data[i+1];
+                float opt3 = gv.data[i+2];
+                float opt4 = gv.data[i+3];
 
                 Sum[0] += opt1 * add1[0];
                 Sum[1] += opt1 * add1[1];
@@ -237,14 +237,16 @@ Image gb_h(Image a, FVec gv)
 
             for (int i = fmax(deta,(gv.length-deta)/4*4);i<gv.length-deta; ++i){
                 offset = i - ext;
-                Sum[0] += gv.data[i]/gv.sum[ext - deta] * (float)get_pixel(a, x + offset, y)[0];
-                Sum[1] += gv.data[i]/gv.sum[ext - deta] * (float)get_pixel(a, x + offset, y)[1];
-                Sum[2] += gv.data[i]/gv.sum[ext - deta] * (float)get_pixel(a, x + offset, y)[2];
+                float data = gv.data[i];
+                float * add = get_pixel(a, x + offset, y);
+                Sum[0] += data * add[0];
+                Sum[1] += data * add[1];
+                Sum[2] += data * add[2];
             }
 
-            pc[0] = Sum[0];
-            pc[1] = Sum[1];
-            pc[2] = Sum[2];
+            pc[0] = Sum[0]/s_data;
+            pc[1] = Sum[1]/s_data;
+            pc[2] = Sum[2]/s_data;
         }
     }
 
@@ -448,29 +450,29 @@ Image gb_v(Image a, FVec gv)
             deta = fmin(deta, gv.min_deta);
             float Sum[3] = {0,0,0};
             int offset;
-
+            float s_data = gv.sum[ext - deta];
             for (int i = deta;i<deta/4*4+4;++i){
                 offset = i - ext;
-                Sum[0] += gv.data[i]/gv.sum[ext - deta] * (float)get_pixel(a, x , y+ offset)[0];
-                Sum[1] += gv.data[i]/gv.sum[ext - deta] * (float)get_pixel(a, x , y+ offset)[1];
-                Sum[2] += gv.data[i]/gv.sum[ext - deta] * (float)get_pixel(a, x , y+ offset)[2];
+                float data = gv.data[i];
+                float * add = get_pixel(a, x , y+ offset);
+                Sum[0] += data * add[0];
+                Sum[1] += data * add[1];
+                Sum[2] += data * add[2];
             }
 
             for (int i = deta/4*4+4; i < (gv.length-deta)/4*4; i+=4)
             {
                 offset = i - ext;
-                
-                float data = gv.sum[ext - deta];
-
+            
                 float * add1 = get_pixel(a, x , y + offset);
                 float * add2 = get_pixel(a, x , y + offset+1);
                 float * add3 = get_pixel(a, x , y + offset+2);
                 float * add4 = get_pixel(a, x , y + offset+3);
 
-                float opt1 = gv.data[i]/data;
-                float opt2 = gv.data[i+1]/data;
-                float opt3 = gv.data[i+2]/data;
-                float opt4 = gv.data[i+3]/data;
+                float opt1 = gv.data[i];
+                float opt2 = gv.data[i+1];
+                float opt3 = gv.data[i+2];
+                float opt4 = gv.data[i+3];
 
                 Sum[0] += opt1 * add1[0];
                 Sum[1] += opt1 * add1[1];
@@ -492,14 +494,16 @@ Image gb_v(Image a, FVec gv)
             for (int i = fmax(deta,(gv.length-deta)/4*4);i<gv.length-deta; ++i)
             {
                 offset = i - ext;
-                Sum[0] += gv.data[i]/gv.sum[ext - deta] * (float)get_pixel(a, x , y+ offset)[0];
-                Sum[1] += gv.data[i]/gv.sum[ext - deta] * (float)get_pixel(a, x , y+ offset)[1];
-                Sum[2] += gv.data[i]/gv.sum[ext - deta] * (float)get_pixel(a, x , y+ offset)[2];
+                float data = gv.data[i];
+                float * add = get_pixel(a, x , y+ offset);
+                Sum[0] += data * add[0];
+                Sum[1] += data * add[1];
+                Sum[2] += data * add[2];
             }
 
-            pc[0] = Sum[0];
-            pc[1] = Sum[1];
-            pc[2] = Sum[2];
+            pc[0] = Sum[0]/s_data;
+            pc[1] = Sum[1]/s_data;
+            pc[2] = Sum[2]/s_data;
         }
     }
 
