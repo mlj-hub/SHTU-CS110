@@ -195,16 +195,8 @@ Image gb_h(Image a, FVec gv)
             float Sum[3] = {0,0,0};
             int offset;
             float s_data = gv.sum[ext - deta];
-            for(int i = deta;i<deta/4*4+4;++i){
-                offset = i - ext;
-                float data = gv.data[i];
-                float * add = get_pixel(a, x + offset, y);
-                Sum[0] += data * add[0];
-                Sum[1] += data * add[1];
-                Sum[2] += data * add[2];
-            }
 
-            for (int i = deta/4*4+4; i < (gv.length-deta)/4*4; i+=4)
+            for (int i = deta; i < (gv.length-2*deta)/4*4+deta; i+=4)
             {
                 offset = i - ext;
 
@@ -235,7 +227,7 @@ Image gb_h(Image a, FVec gv)
                 Sum[2] += opt4 * add4[2];
             }
 
-            for (int i = fmax(deta,(gv.length-deta)/4*4);i<gv.length-deta; ++i){
+            for (int i = (gv.length-2*deta)/4*4+deta;i<gv.length-deta; ++i){
                 offset = i - ext;
                 float data = gv.data[i];
                 float * add = get_pixel(a, x + offset, y);
@@ -451,16 +443,8 @@ Image gb_v(Image a, FVec gv)
             float Sum[3] = {0,0,0};
             int offset;
             float s_data = gv.sum[ext - deta];
-            for (int i = deta;i<deta/4*4+4;++i){
-                offset = i - ext;
-                float data = gv.data[i];
-                float * add = get_pixel(a, x , y+ offset);
-                Sum[0] += data * add[0];
-                Sum[1] += data * add[1];
-                Sum[2] += data * add[2];
-            }
 
-            for (int i = deta/4*4+4; i < (gv.length-deta)/4*4; i+=4)
+            for (int i = deta; i < (gv.length-2*deta)/4*4+deta; i+=4)
             {
                 offset = i - ext;
             
@@ -491,7 +475,7 @@ Image gb_v(Image a, FVec gv)
                 Sum[2] += opt4 * add4[2];
             }
 
-            for (int i = fmax(deta,(gv.length-deta)/4*4);i<gv.length-deta; ++i)
+            for (int i = (gv.length-2*deta)/4*4+deta;i<gv.length-deta; ++i)
             {
                 offset = i - ext;
                 float data = gv.data[i];
