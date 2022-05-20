@@ -52,63 +52,18 @@ void normalize_FVec(FVec v)
     // }
 }
 
-// float gd(float a, float b, float x,double temp)
-// {
-//     float c = (x-b) / a;
-//     return exp((-.5) * c * c) / (a * temp);
-// }
-
-// float o_gd(float a, float x){
-//     float c = x / a;
-//     return exp((-.5) * c * c) / a;
-// }
-
-// /*can be optimised*/
-// FVec make_gv(float a, float x0, float x1, unsigned int length, unsigned int min_length)
-// {
-//     FVec v;
-//     v.length = length;
-//     v.min_length = min_length;
-//     if(v.min_length > v.length){
-//         v.min_deta = 0;
-//     }else{
-//         v.min_deta = ((v.length - v.min_length) / 2);
-//     }
-//     v.data = malloc(length * sizeof(float));
-//     v.sum = malloc((length / 2 + 1)* sizeof(float));
-//     float step = (x1 - x0) / ((float)length);
-//     int offset = length/2;
-
-//     // multi threads 
-
-//     float temp =(float) sqrt(2 * PI);
-//     __m256 c_temp = _mm256_set1_ps(temp);
-//     int max_threads = omp_get_max_threads();
-//     omp_set_num_threads(max_threads);
-//     #pragma omp parallel for
-//     for (int i = 0; i < length/8*8; i+=8){
-//         __m256 opt1 = _mm256_set_ps(o_gd(a,(i+7-offset)*step),o_gd(a,(i+6-offset)*step),\
-//         o_gd(a,(i+5-offset)*step),o_gd(a,(i+4-offset)*step),\
-//         o_gd(a,(i+3-offset)*step),o_gd(a,(i+2-offset)*step),\
-//         o_gd(a,(i+1-offset)*step),o_gd(a,(i-offset)*step));
-//         __m256 data  = _mm256_div_ps(opt1,c_temp);
-//         _mm256_storeu_ps(v.data+i,data);
-//         // v.data[i] = gd(a, 0.0f, (i-offset)*step,temp);
-//     }
-    
-//     for(int i=length/8*8;i<length;++i){
-//         v.data[i] = gd(a, 0.0f, (i-offset)*step,temp);
-//     }
-//     normalize_FVec(v);
-//     return v;
-// }
-
-float gd(float a, float b, float x)
+float gd(float a, float b, float x,double temp)
 {
     float c = (x-b) / a;
-    return exp((-.5) * c * c) / (a * sqrt(2 * PI));
+    return exp((-.5) * c * c) / (a * temp);
 }
 
+float o_gd(float a, float x){
+    float c = x / a;
+    return exp((-.5) * c * c) / a;
+}
+
+/*can be optimised*/
 FVec make_gv(float a, float x0, float x1, unsigned int length, unsigned int min_length)
 {
     FVec v;
@@ -124,9 +79,28 @@ FVec make_gv(float a, float x0, float x1, unsigned int length, unsigned int min_
     float step = (x1 - x0) / ((float)length);
     int offset = length/2;
 
-    for (int i = 0; i < length; i++)
-    {
-        v.data[i] = gd(a, 0.0f, (i-offset)*step);
+    // multi threads 
+
+    float temp =(float) sqrt(2 * PI);
+    __m256 c_temp = _mm256_set1_ps(temp);
+    // int max_threads = omp_get_max_threads();
+    // omp_set_num_threads(max_threads);
+    // #pragma omp parallel for
+    for (int i = 0; i < length/8*8; i+=8){
+        __m256 opt1 = _mm256_set_ps(o_gd(a,(i+7-offset)*step),o_gd(a,(i+6-offset)*step),\
+        o_gd(a,(i+5-offset)*step),o_gd(a,(i+4-offset)*step),\
+        o_gd(a,(i+3-offset)*step),o_gd(a,(i+2-offset)*step),\
+        o_gd(a,(i+1-offset)*step),o_gd(a,(i-offset)*step));
+        __m256 data1  = _mm256_div_ps(opt1,c_temp);
+
+
+        _mm256_storeu_ps(v.data+i,data1);
+
+        // v.data[i] = gd(a, 0.0f, (i-offset)*step,temp);
+    }
+    
+    for(int i=length/8*8;i<length;++i){
+        v.data[i] = gd(a, 0.0f, (i-offset)*step,temp);
     }
     normalize_FVec(v);
     return v;
@@ -176,10 +150,6 @@ Image gb_h(Image a, FVec gv)
     Image b = img_sc(a);
 
     int ext = gv.length / 2;
-    int offset;
-    unsigned int x, y;
-    float *pc;
-    int i;
 
     // int max_threads = omp_get_max_threads();
     // omp_set_num_threads(max_threads);
@@ -211,47 +181,158 @@ Image gb_h(Image a, FVec gv)
     //     }
     // }
 
+// parallel
     int max_threads = omp_get_max_threads();
     omp_set_num_threads(max_threads);
     # pragma omp parallel for
-    for (y = 0; y < a.dimY; ++y)
+    for (unsigned int y = 0; y < a.dimY; ++y)
     {
-        for (x = 0; x < a.dimX; ++x)
+        for (unsigned int x = 0; x < a.dimX; ++x)
         {
-                    pc = get_pixel(b, x, y);
-                    unsigned int deta = fmin(fmin(a.dimY-y-1, y),fmin(a.dimX-x-1, x));
-                    deta = fmin(deta, gv.min_deta);
-                    float Sum[3] = {0,0,0};
-                    for (i = deta; i < gv.length-deta; ++i)
-                    {
-                        offset = i - ext;
-                        Sum[0] += gv.data[i]/gv.sum[ext - deta] * (float)get_pixel(a, x + offset, y)[0];
-                        Sum[1] += gv.data[i]/gv.sum[ext - deta] * (float)get_pixel(a, x + offset, y)[1];
-                        Sum[2] += gv.data[i]/gv.sum[ext - deta] * (float)get_pixel(a, x + offset, y)[2];
-                    }
-                    pc[0] = Sum[0];
-                    pc[1] = Sum[1];
-                    pc[2] = Sum[2];
+            float * pc = get_pixel(b, x, y);
+            unsigned int deta = fmin(fmin(a.dimY-y-1, y),fmin(a.dimX-x-1, x));
+            deta = fmin(deta, gv.min_deta);
+            float Sum[3] = {0,0,0};
+            int offset;
+
+            for(int i = deta;i<deta/4*4+4;++i){
+                offset = i - ext;
+                Sum[0] += gv.data[i]/gv.sum[ext - deta] * (float)get_pixel(a, x + offset, y)[0];
+                Sum[1] += gv.data[i]/gv.sum[ext - deta] * (float)get_pixel(a, x + offset, y)[1];
+                Sum[2] += gv.data[i]/gv.sum[ext - deta] * (float)get_pixel(a, x + offset, y)[2];
+            }
+
+            for (int i = deta/4*4+4; i < (gv.length-deta)/4*4; i+=4)
+            {
+                offset = i - ext;
+
+                float data = gv.sum[ext - deta];
+
+                float * add1 = get_pixel(a, x + offset, y);
+                float * add2 = get_pixel(a, x + offset+1, y);
+                float * add3 = get_pixel(a, x + offset+2, y);
+                float * add4 = get_pixel(a, x + offset+3, y);
+
+                float opt1 = gv.data[i]/data;
+                float opt2 = gv.data[i+1]/data;
+                float opt3 = gv.data[i+2]/data;
+                float opt4 = gv.data[i+3]/data;
+
+                Sum[0] += opt1 * add1[0];
+                Sum[1] += opt1 * add1[1];
+                Sum[2] += opt1 * add1[2];
+
+                Sum[0] += opt2 * add2[0];
+                Sum[1] += opt2 * add2[1];
+                Sum[2] += opt2 * add2[2];
+                
+                Sum[0] += opt3 * add3[0];
+                Sum[1] += opt3 * add3[1];
+                Sum[2] += opt3 * add3[2];
+                
+                Sum[0] += opt4 * add4[0];
+                Sum[1] += opt4 * add4[1];
+                Sum[2] += opt4 * add4[2];
+            }
+
+            for (int i = fmax(deta,(gv.length-deta)/4*4);i<gv.length-deta; ++i){
+                offset = i - ext;
+                Sum[0] += gv.data[i]/gv.sum[ext - deta] * (float)get_pixel(a, x + offset, y)[0];
+                Sum[1] += gv.data[i]/gv.sum[ext - deta] * (float)get_pixel(a, x + offset, y)[1];
+                Sum[2] += gv.data[i]/gv.sum[ext - deta] * (float)get_pixel(a, x + offset, y)[2];
+            }
+
+            pc[0] = Sum[0];
+            pc[1] = Sum[1];
+            pc[2] = Sum[2];
         }
     }
 
-    // for (channel = 0; channel < a.numChannels; channel++)
+// SIMD and parallel
+    // int max_threads = omp_get_max_threads();
+    // omp_set_num_threads(max_threads);
+    // # pragma omp parallel for
+    // for (y = 0; y < a.dimY; ++y)
     // {
     //     for (x = 0; x < a.dimX; ++x)
     //     {
-    //         for (y = 0; y < a.dimY; ++y)
+    //         pc = get_pixel(b, x, y);
+    //         unsigned int deta = fmin(fmin(a.dimY-y-1, y),fmin(a.dimX-x-1, x));
+    //         deta = fmin(deta, gv.min_deta);
+    //         float Sum[3] = {0,0,0};
+    //         float test_sum = 0;
+    //         __m256 c_temp = _mm256_set1_ps(gv.sum[ext - deta]);
+    //         float temp_result[8];
+    //         for (i = deta; i < (gv.length-deta)/8*8; i+=8)
     //         {
-    //             pc = get_pixel(b, x, y);
-    //             unsigned int deta = fmin(fmin(a.dimY-y-1, y),fmin(a.dimX-x-1, x));
-    //             deta = fmin(deta, gv.min_deta);
-    //             sum = 0;
-    //             for (i = deta; i < gv.length-deta; ++i)
-    //             {
-    //                 offset = i - ext;
-    //                 sum += gv.data[i]/gv.sum[ext - deta] * (float)get_pixel(a, x + offset, y)[channel];
+    //             offset = i - ext;
+    //             __m256 gvd = _mm256_loadu_ps(gv.data+i);
+
+    //             __m256 result = _mm256_div_ps(gvd,c_temp);
+    //             __m256 opt0 = _mm256_setr_ps((float)get_pixel(a, x + offset, y)[0],(float)get_pixel(a, x + offset+1, y)[0],\
+    //             (float)get_pixel(a, x + offset+2, y)[0],(float)get_pixel(a, x + offset+3, y)[0],\
+    //             (float)get_pixel(a, x + offset+4, y)[0],(float)get_pixel(a, x + offset+5, y)[0],\
+    //             (float)get_pixel(a, x + offset+6, y)[0],(float)get_pixel(a, x + offset+7, y)[0]);
+    //             result = _mm256_mul_ps(result,opt0);
+    //             _mm256_storeu_ps(temp_result,result);
+    //             for(int j = 0;j<8;++j){
+    //                 // Sum[1]+=temp_result[j];
+    //                 Sum[0]+=gv.data[i+j]/gv.sum[ext - deta] * (float)get_pixel(a, x + offset+j, y)[0];
     //             }
-    //             pc[channel] = sum;
+
+    //             result = _mm256_div_ps(gvd,c_temp);
+    //             __m256 opt1 = _mm256_setr_ps((float)get_pixel(a, x + offset, y)[1],(float)get_pixel(a, x + offset+1, y)[1],\
+    //             (float)get_pixel(a, x + offset+2, y)[1],(float)get_pixel(a, x + offset+3, y)[1],\
+    //             (float)get_pixel(a, x + offset+4, y)[1],(float)get_pixel(a, x + offset+5, y)[1],\
+    //             (float)get_pixel(a, x + offset+6, y)[1],(float)get_pixel(a, x + offset+7, y)[1]);
+    //             result = _mm256_mul_ps(result,opt1);
+    //             _mm256_storeu_ps(temp_result,result); 
+    //             for(int j = 0;j<8;++j){
+    //                 // Sum[1]+=temp_result[j];
+    //                 Sum[1]+=gv.data[i+j]/gv.sum[ext - deta] * (float)get_pixel(a, x + offset+j, y)[1];
+    //             }
+
+    //             // static int cnt = 0;
+    //             // for(int j = 0;j<8&&cnt<20;++j){
+    //             //     printf("%f ",temp_result[j]);
+    //             // }
+    //             // if(cnt<20)
+    //             //     printf("---- SIMD sum: %f \n",Sum[1]);
+
+    //             // for(int j = 0;j<8&&cnt<20;++j){
+    //             //     test_sum+=gv.data[i+j]/gv.sum[ext - deta] * (float)get_pixel(a, x + offset+j, y)[1];
+    //             //     printf("%f ",gv.data[i+j]/gv.sum[ext - deta] * (float)get_pixel(a, x + offset+j, y)[1]);
+    //             // }
+    //             // if(cnt<20)
+    //             //     printf("     Norm sum: %f \n",test_sum);
+
+    //             // cnt++;
+
+    //             result = _mm256_div_ps(gvd,c_temp);
+    //             __m256 opt2 = _mm256_setr_ps((float)get_pixel(a, x + offset, y)[2],(float)get_pixel(a, x + offset+1, y)[2],\
+    //             (float)get_pixel(a, x + offset+2, y)[2],(float)get_pixel(a, x + offset+3, y)[2],\
+    //             (float)get_pixel(a, x + offset+4, y)[2],(float)get_pixel(a, x + offset+5, y)[2],\
+    //             (float)get_pixel(a, x + offset+6, y)[2],(float)get_pixel(a, x + offset+7, y)[2]);
+    //             result = _mm256_mul_ps(result,opt2);
+    //             _mm256_storeu_ps(temp_result,result);
+    //             for(int j = 0;j<8;++j){
+    //                 // Sum[1]+=temp_result[j];
+    //                 Sum[2]+=gv.data[i+j]/gv.sum[ext - deta] * (float)get_pixel(a, x + offset+j, y)[2];
+    //             }
     //         }
+
+
+    //         for (i = (gv.length-deta)/8*8; i < gv.length-deta; ++i)
+    //         {
+    //             offset = i - ext;
+    //             Sum[0] += gv.data[i]/gv.sum[ext - deta] * (float)get_pixel(a, x + offset, y)[0];
+    //             Sum[1] += gv.data[i]/gv.sum[ext - deta] * (float)get_pixel(a, x + offset, y)[1];
+    //             Sum[2] += gv.data[i]/gv.sum[ext - deta] * (float)get_pixel(a, x + offset, y)[2];
+    //         }
+
+    //         pc[0] = Sum[0];
+    //         pc[1] = Sum[1];
+    //         pc[2] = Sum[2];
     //     }
     // }
 
@@ -263,10 +344,40 @@ Image gb_v(Image a, FVec gv)
     Image b = img_sc(a);
 
     int ext = gv.length / 2;
-    int offset;
-    unsigned int x, y;
-    float* pc;
-    int i;
+
+// cache blocking 
+//     int max_threads = omp_get_max_threads();
+//     omp_set_num_threads(max_threads);
+//     # pragma omp parallel for
+//     for (unsigned int x = 0; x < a.dimX; x+=BLOCK_SIZE)
+//     {
+//         for (unsigned int y = 0; y < a.dimY; y+=BLOCK_SIZE)
+//         {
+//             for(int Y=y;Y<y+BLOCK_SIZE&&Y<a.dimY;++Y)
+//             {
+//                 for(int X=x;X<x+BLOCK_SIZE&&X<a.dimX;++X)
+//                 {
+//                     float* pc = get_pixel(b, X, Y);
+//                     unsigned int deta = fmin(fmin(a.dimY-Y-1, Y),fmin(a.dimX-X-1, X));
+//                     deta = fmin(deta, gv.min_deta);
+//                     float Sum[3] = {0,0,0};
+//                     int offset;
+//                     for (int i = deta; i < gv.length-deta; ++i)
+//                     {
+//                         offset = i - ext;
+//                         Sum[0] += gv.data[i] /gv.sum[ext - deta] * (float)get_pixel(a, X, Y + offset)[0];
+//                         Sum[1] += gv.data[i] /gv.sum[ext - deta] * (float)get_pixel(a, X, Y + offset)[1];
+//                         Sum[2] += gv.data[i] /gv.sum[ext - deta] * (float)get_pixel(a, X, Y + offset)[2];
+//                     }
+//                     pc[0] = Sum[0];
+//                     pc[1] = Sum[1];
+//                     pc[2] = Sum[2];
+//                 }
+//             }
+//         }
+//     }
+
+// another cache blocking (just for testing )
     // int max_threads = omp_get_max_threads();
     // omp_set_num_threads(max_threads);
     // # pragma omp parallel for
@@ -274,20 +385,22 @@ Image gb_v(Image a, FVec gv)
     // {
     //     for (y = 0; y < a.dimY; y+=BLOCK_SIZE)
     //     {
-    //         for(int X=x;X<x+BLOCK_SIZE&&X<a.dimX;++X)
+    //         for(int Y=y;Y<y+BLOCK_SIZE&&Y<a.dimY;++Y)
     //         {
-    //             for(int Y=y;Y<y+BLOCK_SIZE&&Y<a.dimY;++Y)
+    //             for(int X=x;X<x+BLOCK_SIZE&&X<a.dimX;++X)
     //             {
     //                 pc = get_pixel(b, X, Y);
     //                 unsigned int deta = fmin(fmin(a.dimY-Y-1, Y),fmin(a.dimX-X-1, X));
     //                 deta = fmin(deta, gv.min_deta);
     //                 float Sum[3] = {0,0,0};
-    //                 for (i = deta; i < gv.length-deta; ++i)
+    //                 for (i = deta; i < gv.length-deta; i+=BLOCK_SIZE)
     //                 {
-    //                     offset = i - ext;
-    //                     Sum[0] += gv.data[i] /gv.sum[ext - deta] * (float)get_pixel(a, X, Y + offset)[0];
-    //                     Sum[1] += gv.data[i] /gv.sum[ext - deta] * (float)get_pixel(a, X, Y + offset)[1];
-    //                     Sum[2] += gv.data[i] /gv.sum[ext - deta] * (float)get_pixel(a, X, Y + offset)[2];
+    //                     for(int I = i;I<i+BLOCK_SIZE && I<gv.length-deta;++I){
+    //                         offset = I - ext;
+    //                         Sum[0] += gv.data[I] /gv.sum[ext - deta] * (float)get_pixel(a, X, Y + offset)[0];
+    //                         Sum[1] += gv.data[I] /gv.sum[ext - deta] * (float)get_pixel(a, X, Y + offset)[1];
+    //                         Sum[2] += gv.data[I] /gv.sum[ext - deta] * (float)get_pixel(a, X, Y + offset)[2];
+    //                     }
     //                 }
     //                 pc[0] = Sum[0];
     //                 pc[1] = Sum[1];
@@ -297,49 +410,98 @@ Image gb_v(Image a, FVec gv)
     //     }
     // }
 
+// parallel
+    // int max_threads = omp_get_max_threads();
+    // omp_set_num_threads(max_threads);
+    // # pragma omp parallel for
+    // for (x = 0; x < a.dimX; ++x)
+    // {
+    //     for (y = 0; y < a.dimY; ++y)
+    //     {
+    //         pc = get_pixel(b, x, y);
+    //         unsigned int deta = fmin(fmin(a.dimY-y-1, y),fmin(a.dimX-x-1, x));
+    //         deta = fmin(deta, gv.min_deta);
+    //         float Sum[3] = {0,0,0};
+    //         for (i = deta; i < gv.length-deta; ++i)
+    //         {
+    //             offset = i - ext;
+    //             Sum[0] += gv.data[i] /gv.sum[ext - deta] * (float)get_pixel(a, x, y + offset)[0];
+    //             Sum[1] += gv.data[i] /gv.sum[ext - deta] * (float)get_pixel(a, x, y + offset)[1];
+    //             Sum[2] += gv.data[i] /gv.sum[ext - deta] * (float)get_pixel(a, x, y + offset)[2];
+    //         }
+    //         pc[0] = Sum[0];
+    //         pc[1] = Sum[1];
+    //         pc[2] = Sum[2];
+    //     }
+    // }
+
+// parallel
     int max_threads = omp_get_max_threads();
     omp_set_num_threads(max_threads);
     # pragma omp parallel for
-    for (x = 0; x < a.dimX; ++x)
+    for (unsigned int x = 0; x < a.dimX; ++x)
     {
-        for (y = 0; y < a.dimY; ++y)
+        for (unsigned int y = 0; y < a.dimY; ++y)
         {
-            pc = get_pixel(b, x, y);
+            float *pc = get_pixel(b, x, y);
             unsigned int deta = fmin(fmin(a.dimY-y-1, y),fmin(a.dimX-x-1, x));
             deta = fmin(deta, gv.min_deta);
             float Sum[3] = {0,0,0};
-            for (i = deta; i < gv.length-deta; ++i)
+            int offset;
+
+            for (int i = deta;i<deta/4*4+4;++i){
+                offset = i - ext;
+                Sum[0] += gv.data[i]/gv.sum[ext - deta] * (float)get_pixel(a, x , y+ offset)[0];
+                Sum[1] += gv.data[i]/gv.sum[ext - deta] * (float)get_pixel(a, x , y+ offset)[1];
+                Sum[2] += gv.data[i]/gv.sum[ext - deta] * (float)get_pixel(a, x , y+ offset)[2];
+            }
+
+            for (int i = deta/4*4+4; i < (gv.length-deta)/4*4; i+=4)
             {
                 offset = i - ext;
-                Sum[0] += gv.data[i] /gv.sum[ext - deta] * (float)get_pixel(a, x, y + offset)[0];
-                Sum[1] += gv.data[i] /gv.sum[ext - deta] * (float)get_pixel(a, x, y + offset)[1];
-                Sum[2] += gv.data[i] /gv.sum[ext - deta] * (float)get_pixel(a, x, y + offset)[2];
+                
+                float data = gv.sum[ext - deta];
+
+                float * add1 = get_pixel(a, x , y + offset);
+                float * add2 = get_pixel(a, x , y + offset+1);
+                float * add3 = get_pixel(a, x , y + offset+2);
+                float * add4 = get_pixel(a, x , y + offset+3);
+
+                float opt1 = gv.data[i]/data;
+                float opt2 = gv.data[i+1]/data;
+                float opt3 = gv.data[i+2]/data;
+                float opt4 = gv.data[i+3]/data;
+
+                Sum[0] += opt1 * add1[0];
+                Sum[1] += opt1 * add1[1];
+                Sum[2] += opt1 * add1[2];
+                
+                Sum[0] += opt2 * add2[0];
+                Sum[1] += opt2 * add2[1];
+                Sum[2] += opt2 * add2[2];
+                
+                Sum[0] += opt3 * add3[0];
+                Sum[1] += opt3 * add3[1];
+                Sum[2] += opt3 * add3[2];
+                
+                Sum[0] += opt4 * add4[0];
+                Sum[1] += opt4 * add4[1];
+                Sum[2] += opt4 * add4[2];
             }
+
+            for (int i = fmax(deta,(gv.length-deta)/4*4);i<gv.length-deta; ++i)
+            {
+                offset = i - ext;
+                Sum[0] += gv.data[i]/gv.sum[ext - deta] * (float)get_pixel(a, x , y+ offset)[0];
+                Sum[1] += gv.data[i]/gv.sum[ext - deta] * (float)get_pixel(a, x , y+ offset)[1];
+                Sum[2] += gv.data[i]/gv.sum[ext - deta] * (float)get_pixel(a, x , y+ offset)[2];
+            }
+
             pc[0] = Sum[0];
             pc[1] = Sum[1];
             pc[2] = Sum[2];
         }
     }
-
-    // for (channel = 0; channel < a.numChannels; channel++)
-    // {
-    //     for (x = 0; x < a.dimX; ++x)
-    //     {
-    //         for (y = 0; y < a.dimY; ++y)
-    //         {
-    //             pc = get_pixel(b, x, y);
-    //             unsigned int deta = fmin(fmin(a.dimY-y-1, y),fmin(a.dimX-x-1, x));
-    //             deta = fmin(deta, gv.min_deta);
-    //             sum = 0;
-    //             for (i = deta; i < gv.length-deta; ++i)
-    //             {
-    //                 offset = i - ext;
-    //                 sum =sum+ gv.data[i] /gv.sum[ext - deta] * (float)get_pixel(a, x, y + offset)[channel];
-    //             }
-    //             pc[channel] = sum;
-    //         }
-    //     }
-    // }
 
     return b;
 }
