@@ -210,12 +210,12 @@ Image gb_h(Image a, FVec gv)
                 float *add0, *add1, *add2, *add3, *add4, *add5, *add6, *add7;
 
                 if(x+offset+7<=0)
-                    add0=add1=add2=add3=add4=add5=add6=add7=get_pixel(a,x+offset,y);
+                    add0=add1=add2=add3=add4=add5=add6=add7=a.data+3*(y*a.dimX);
                 else if(x+offset>=(int)a.dimX-1)
-                    add0=add1=add2=add3=add4=add5=add6=add7=get_pixel(a,x+offset,y);
+                    add0=add1=add2=add3=add4=add5=add6=add7=a.data+3*(y*a.dimX+(int)a.dimX-1);
                 if (x + offset >= 0 && x + offset + 7 <= a.dimX - 1)
                 {
-                    add0 = get_pixel(a, x + offset, y);
+                    add0 =  a.data+3*(y*a.dimX+x+offset);
                     add1 = add0 + 3;
                     add2 = add0 + 6;
                     add3 = add0 + 9;
@@ -380,19 +380,19 @@ Image gb_v(Image a, FVec gv)
                 float *add7;
 
                 if(y+offset+7<=0)
-                    add0=add1=add2=add3=add4=add5=add6=add7=get_pixel(a,x,y+offset);
+                    add0=add1=add2=add3=add4=add5=add6=add7=a.data+ 3*x;
                 else if(y+offset>=(int)a.dimY-1)
-                    add0=add1=add2=add3=add4=add5=add6=add7=get_pixel(a,x,y+offset);
+                    add0=add1=add2=add3=add4=add5=add6=add7=a.data+ 3*(((int)a.dimY-1)*a.dimX+x);
                 else if (y + offset >= 0 && y + offset + 7 <= (int)a.dimY - 1)
                 {
-                    add0 = get_pixel(a, x, y + offset);
-                    add1 = add0 + 1*a.numChannels * a.dimX;
-                    add2 = add0 + 2*a.numChannels * a.dimX;
-                    add3 = add0 + 3*a.numChannels * a.dimX;
-                    add4 = add0 + 4*a.numChannels * a.dimX;
-                    add5 = add0 + 5*a.numChannels * a.dimX;
-                    add6 = add0 + 6*a.numChannels * a.dimX;
-                    add7 = add0 + 7*a.numChannels * a.dimX;
+                    add0 = a.data+ 3*((y+offset)*a.dimX+x);
+                    add1 = add0 + 3* a.dimX;
+                    add2 = add0 + 6 * a.dimX;
+                    add3 = add0 + 9 * a.dimX;
+                    add4 = add0 + 12 * a.dimX;
+                    add5 = add0 + 15* a.dimX;
+                    add6 = add0 + 18* a.dimX;
+                    add7 = add0 + 21* a.dimX;
                 }
                 else
                 {
