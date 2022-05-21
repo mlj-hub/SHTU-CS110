@@ -186,9 +186,9 @@ Image gb_h(Image a, FVec gv)
     omp_set_num_threads(max_threads);
     //omp_set_num_threads(2);
     # pragma omp parallel for
-    for (unsigned int y = 0; y < a.dimY; ++y)
+    for (int y = 0; y < a.dimY; ++y)
     {
-        for (unsigned int x = 0; x < a.dimX; ++x)
+        for (int x = 0; x < a.dimX; ++x)
         {
             float * pc = get_pixel(b, x, y);
             unsigned int deta = fmin(fmin(a.dimY-y-1, y),fmin(a.dimX-x-1, x));
@@ -197,9 +197,7 @@ Image gb_h(Image a, FVec gv)
             int offset;
             float s_data = gv.sum[ext - deta];
 
-            float Sum0[8] = {0.0f}; 
-            float Sum1[8] = {0.0f}; 
-            float Sum2[8] = {0.0f}; 
+            float Sum0[3][8] = {0.0f}; 
             
             __m256 Sum0256 = _mm256_setzero_ps();
             __m256 Sum1256 = _mm256_setzero_ps();
@@ -208,14 +206,50 @@ Image gb_h(Image a, FVec gv)
             for (int i = deta; i < (gv.length-2*deta)/8*8+deta; i+=8)
             {
                 offset = i - ext;
+
+                float * add0 ;
+                float * add1 ;
+                float * add2 ;
+                float * add3 ;
+                float * add4 ;
+                float * add5 ;
+                float * add6 ;
+                float * add7 ;
+
+                if(x+offset+7<=0)
+                    add0=add1=add2=add3=add4=add5=add6=add7=get_pixel(a,x+offset,y);
+                else if(x+offset>=a.dimX-1)
+                    add0=add1=add2=add3=add4=add5=add6=add7=get_pixel(a,x+offset,y);
+                else if(x+offset>=0 && x+offset+7<=a.dimX-1){
+                    add0 = get_pixel(a,x+offset,y);
+                    add1 = add0+3;
+                    add2 = add0+6;
+                    add3 = add0+9;
+                    add4 = add0+12;
+                    add5 = add0+15;
+                    add6 = add0+18;
+                    add7 = add0+21;
+                }
+                else{
+                    add0 = get_pixel(a,x+offset,y);
+                    add1 = get_pixel(a,x+offset+1,y);
+                    add2 = get_pixel(a,x+offset+2,y);
+                    add3 = get_pixel(a,x+offset+3,y);
+                    add4 = get_pixel(a,x+offset+4,y);
+                    add5 = get_pixel(a,x+offset+5,y);
+                    add6 = get_pixel(a,x+offset+6,y);
+                    add7 = get_pixel(a,x+offset+7,y);
+                }
                 /*
                 float * add0 = get_pixel(a, x + offset, y);
                 float * add1 = get_pixel(a, x + offset+1, y);
-                float * add2 = get_pixel(a, x +https://zhuanlan.zhihu.com/p/1466833920],add2[0],add3[0],add4[0],add5[0],add6[0],add7[0]};
+                float * add2 = get_pixel(a, x + offset+2, y);
+                /*
+                ,add2[0],add3[0],add4[0],add5[0],add6[0],add7[0]};
                 float Chan1[8] = {add0[1],add1[1],add2[1],add3[1],add4[1],add5[1],add6[1],add7[1]};
                 float Chan2[8] = {add0[2],add1[2],add2[2],add3[2],add4[2],add5[2],add6[2],add7[2]};
                 */
-
+               /*
                 float Chan0[8] = {get_pixel(a,x+offset,y)[0],get_pixel(a,x+offset+1,y)[0],get_pixel(a,x+offset+2,y)[0]
                                     ,get_pixel(a,x+offset+3,y)[0],get_pixel(a,x+offset+4,y)[0],get_pixel(a,x+offset+5,y)[0]
                                     ,get_pixel(a,x+offset+6,y)[0],get_pixel(a,x+offset+7,y)[0]};
@@ -225,14 +259,23 @@ Image gb_h(Image a, FVec gv)
                 float Chan2[8] = {get_pixel(a,x+offset,y)[2],get_pixel(a,x+offset+1,y)[2],get_pixel(a,x+offset+2,y)[2]
                                     ,get_pixel(a,x+offset+3,y)[2],get_pixel(a,x+offset+4,y)[2],get_pixel(a,x+offset+5,y)[2]
                                     ,get_pixel(a,x+offset+6,y)[2],get_pixel(a,x+offset+7,y)[2]};
-
+                */
                 ///float data[8] = {gv.data[i],gv.data[i+1],gv.data[i+2],gv.data[i+3],gv.data[i+4],gv.data[i+5],gv.data[i+6],gv.data[i+7]};
                 
                 __m256 Data = _mm256_loadu_ps(gv.data+i);
 
-                __m256 Chan0256 = _mm256_loadu_ps(Chan0); 
-                __m256 Chan1256 = _mm256_loadu_ps(Chan1);
-                __m256 Chan2256 = _mm256_loadu_ps(Chan2);
+                // __m256 Chan0256 = _mm256_loadu_ps(Chan0); 
+                // __m256 Chan1256 = _mm256_loadu_ps(Chan1);
+                // __m256 Chan2256 = _mm256_loadu_ps(Chan2);
+                __m256 Chan0256 = _mm256_setr_ps(add0[0],add1[0],add2[0]
+                                    ,add3[0],add4[0],add5[0]
+                                    ,add6[0],add7[0]);
+                __m256 Chan1256 = _mm256_setr_ps(add0[1],add1[1],add2[1]
+                                    ,add3[1],add4[1],add5[1]
+                                    ,add6[1],add7[1]);
+                __m256 Chan2256 = _mm256_setr_ps(add0[2],add1[2],add2[2]
+                                    ,add3[2],add4[2],add5[2]
+                                    ,add6[2],add7[2]);
                 /*
                 __m256 Sum0256 = _mm256_loadu_ps(Sum0);
                 __m256 Sum1256 = _mm256_loadu_ps(Sum1);
@@ -294,23 +337,21 @@ Image gb_h(Image a, FVec gv)
                 Sum[2] += opt5 * add5[2];
 
                 Sum[0] += opt6 * add6[0];
-                Sum[1] += opt6 * add6[1];
-                Sum[2] += opt6 * add6[2];
-
-                Sum[0] += opt7 * add7[0];
-                Sum[1] += opt7 * add7[1];
-                Sum[2] += opt7 * add7[2];
+                Sum[1] += opt6 * add6[1];eu_ps(Sum1,Sum1256);
+                _mm256_storeu_ps(Sum2,Sum2256);
+                Sum[0] += Sum0[0]+Sum0[1]+Sum0[2]+Sum0[3]+Sum0[4]+Sum0[5]+Sum0[6]+Sum0[7];
+                Sum[1] += Sum1[0]+Sum1[1]+Sum1[2]+Sum1[3]+Sum1[4]+Su
                 */
                 
             }
-            
-                _mm256_storeu_ps(Sum0,Sum0256);
-                _mm256_storeu_ps(Sum1,Sum1256);
-                _mm256_storeu_ps(Sum2,Sum2256);
-                Sum[0] += Sum0[0]+Sum0[1]+Sum0[2]+Sum0[3]+Sum0[4]+Sum0[5]+Sum0[6]+Sum0[7];
-                Sum[1] += Sum1[0]+Sum1[1]+Sum1[2]+Sum1[3]+Sum1[4]+Sum1[5]+Sum1[6]+Sum1[7];
-                Sum[2] += Sum2[0]+Sum2[1]+Sum2[2]+Sum2[3]+Sum2[4]+Sum2[5]+Sum2[6]+Sum2[7];
-            
+                
+                _mm256_storeu_ps(Sum0[0],Sum0256);
+                _mm256_storeu_ps(Sum0[1],Sum1256);
+                _mm256_storeu_ps(Sum0[2],Sum2256);
+                Sum[0] += Sum0[0][0]+Sum0[0][1]+Sum0[0][2]+Sum0[0][3]+Sum0[0][4]+Sum0[0][5]+Sum0[0][6]+Sum0[0][7];
+                Sum[1] += Sum0[1][0]+Sum0[1][1]+Sum0[1][2]+Sum0[1][3]+Sum0[1][4]+Sum0[1][5]+Sum0[1][6]+Sum0[1][7];
+                Sum[2] += Sum0[2][0]+Sum0[2][1]+Sum0[2][2]+Sum0[2][3]+Sum0[2][4]+Sum0[2][5]+Sum0[2][6]+Sum0[2][7];
+                
             for (int i = (gv.length-2*deta)/8*8+deta;i<gv.length-deta; ++i){
                 offset = i - ext;
                 float data = gv.data[i];
