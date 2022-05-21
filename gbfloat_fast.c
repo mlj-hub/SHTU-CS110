@@ -20,6 +20,7 @@
 
 #define BLOCK_SIZE 16
 #define BIT_SIZE 256
+#define UNROLLING 16
 
 typedef struct FVec
 {
@@ -53,10 +54,10 @@ Image transpose(Image a){
     omp_set_num_threads(max_threads);
     // #pragma omp parallel for
     #pragma omp parallel for 
-    for(int x=0;x<a.dimX;x+=BLOCK_SIZE){
-        for(int y=0;y<a.dimY;y+=BLOCK_SIZE){
-            for(int X = x;X<x+BLOCK_SIZE&&X<a.dimX;++X){
-                for(int Y = y;Y<y+BLOCK_SIZE&&Y<a.dimY;++Y){
+    for(int x=0;x<(int)a.dimX;x+=BLOCK_SIZE){
+        for(int y=0;y<(int)a.dimY;y+=BLOCK_SIZE){
+            for(int X = x;X<x+BLOCK_SIZE&&X<(int)a.dimX;++X){
+                for(int Y = y;Y<y+BLOCK_SIZE&&Y<(int)a.dimY;++Y){
                     (b.data+3*(X*b.dimX+Y))[0]=(a.data+3*(Y*a.dimX+X))[0];
                     (b.data+3*(X*b.dimX+Y))[1]=(a.data+3*(Y*a.dimX+X))[1];
                     (b.data+3*(X*b.dimX+Y))[2]=(a.data+3*(Y*a.dimX+X))[2];
@@ -77,13 +78,13 @@ void get_RGB(Image a,Image * r,Image * g,Image*b){
     omp_set_num_threads(max_threads);
     // #pragma omp parallel for
     #pragma omp parallel for 
-    for(int y=0;y<a.dimY;y+=BLOCK_SIZE)
+    for(int y=0;y<(int)a.dimY;y+=BLOCK_SIZE)
     {
-        for(int x=0;x<a.dimX;x+=BLOCK_SIZE)
+        for(int x=0;x<(int)a.dimX;x+=BLOCK_SIZE)
         {
-            for(int Y = y;Y<y+BLOCK_SIZE&&Y<a.dimY;++Y)
+            for(int Y = y;Y<y+BLOCK_SIZE&&Y<(int)a.dimY;++Y)
             {
-                for(int X = x;X<x+BLOCK_SIZE&&X<a.dimX;++X)
+                for(int X = x;X<x+BLOCK_SIZE&&X<(int)a.dimX;++X)
                 {
                     (r->data+(Y*a.dimX+X))[0]=(a.data+3*(Y*a.dimX+X))[0];
                     (g->data+(Y*a.dimX+X))[0]=(a.data+3*(Y*a.dimX+X))[1];
@@ -145,20 +146,16 @@ FVec make_gv(float a, float x0, float x1, unsigned int length, unsigned int min_
     // int max_threads = omp_get_max_threads();
     // omp_set_num_threads(max_threads);
     // #pragma omp parallel for
-    for (int i = 0; i < length/8*8; i+=8){
+    for (int i = 0; i < (int)length/8*8; i+=8){
         __m256 opt1 = _mm256_set_ps(o_gd(a,(i+7-offset)*step),o_gd(a,(i+6-offset)*step),\
         o_gd(a,(i+5-offset)*step),o_gd(a,(i+4-offset)*step),\
         o_gd(a,(i+3-offset)*step),o_gd(a,(i+2-offset)*step),\
         o_gd(a,(i+1-offset)*step),o_gd(a,(i-offset)*step));
         __m256 data1  = _mm256_div_ps(opt1,c_temp);
-
-
         _mm256_storeu_ps(v.data+i,data1);
-
-        // v.data[i] = gd(a, 0.0f, (i-offset)*step,temp);
     }
     
-    for(int i=length/8*8;i<length;++i){
+    for(int i=length/8*8;i<(int)length;++i){
         v.data[i] = gd(a, 0.0f, (i-offset)*step,temp);
     }
     normalize_FVec(v);
@@ -189,7 +186,7 @@ float* get_pixel(Image img, int x, int y)
     {
         x = 0;
     }
-    if (x >= img.dimX)
+    if (x >=(int) img.dimX)
     {
         x = img.dimX - 1;
     }
@@ -197,7 +194,7 @@ float* get_pixel(Image img, int x, int y)
     {
         y = 0;
     }
-    if (y >= img.dimY)
+    if (y >= (int)img.dimY)
     {
         y = img.dimY - 1;
     }
@@ -222,9 +219,9 @@ Image gb_h(Image a, Image r,Image g,Image b,FVec gv)
     int max_threads = omp_get_max_threads();
     omp_set_num_threads(max_threads);
     # pragma omp parallel for
-    for (int y = 0; y < a.dimY; ++y)
+    for (int y = 0; y < (int)a.dimY; ++y)
     {
-        for (int x = 0; x < a.dimX; ++x)
+        for (int x = 0; x < (int)a.dimX; ++x)
         {
             float * pc = get_pixel(o, x, y);
             unsigned int deta = fmin(fmin(a.dimY-y-1, y),fmin(a.dimX-x-1, x));
@@ -233,13 +230,13 @@ Image gb_h(Image a, Image r,Image g,Image b,FVec gv)
             int offset;
             float s_data = gv.sum[ext - deta];
 
-            float Sum0[3][8] = {0.0f}; 
+            float Sum0[3][8] = {{0.0f,.0f,.0f},{0.0f,.0f,.0f},{0.0f,.0f,.0f}}; 
             
             __m256 Sum0256 = _mm256_setzero_ps();
             __m256 Sum1256 = _mm256_setzero_ps();
             __m256 Sum2256 = _mm256_setzero_ps();
 
-            for (int i = deta; i < (gv.length-2*deta)/16*16+deta; i+=16)
+            for (unsigned int i = (int)deta; i < (gv.length-2*deta)/UNROLLING*UNROLLING+deta; i+=UNROLLING)
             {
                 offset = i - ext;
                 int pixel0,pixel1,pixel2,pixel3,pixel4,pixel5,pixel6,pixel7;
@@ -263,7 +260,7 @@ Image gb_h(Image a, Image r,Image g,Image b,FVec gv)
                     DataG=_mm256_set1_ps((g.data+y*(int)a.dimX+(int)a.dimX-1)[0]);
                     DataB=_mm256_set1_ps((b.data+y*(int)a.dimX+(int)a.dimX-1)[0]);
                 }
-                else if (x + offset >= 0 && x + offset + 7 <= a.dimX - 1)
+                else if (x + offset >= 0 && x + offset + 7 <=(int) a.dimX - 1)
                 {
                     DataR = _mm256_loadu_ps(r.data+y*(int)a.dimX+x+offset);
                     DataG = _mm256_loadu_ps(g.data+y*(int)a.dimX+x+offset);
@@ -289,10 +286,12 @@ Image gb_h(Image a, Image r,Image g,Image b,FVec gv)
                     (b.data+pixel3)[0],(b.data+pixel4)[0],(b.data+pixel5)[0],(b.data+pixel6)[0],\
                     (b.data+pixel7)[0]);
                 }
-                
-                Sum0256 = _mm256_add_ps(_mm256_mul_ps(DataR, Data), Sum0256);
-                Sum1256 = _mm256_add_ps(_mm256_mul_ps(DataG, Data), Sum1256);
-                Sum2256 = _mm256_add_ps(_mm256_mul_ps(DataB, Data), Sum2256);
+                DataR = _mm256_mul_ps(DataR, Data);
+                DataG = _mm256_mul_ps(DataG, Data);
+                DataB = _mm256_mul_ps(DataB, Data);
+                Sum0256 = _mm256_add_ps(DataR, Sum0256);
+                Sum1256 = _mm256_add_ps(DataG, Sum1256);
+                Sum2256 = _mm256_add_ps(DataB, Sum2256);
 
                 Data = _mm256_loadu_ps(gv.data+i+8);
 
@@ -306,7 +305,7 @@ Image gb_h(Image a, Image r,Image g,Image b,FVec gv)
                     DataG2=_mm256_set1_ps((g.data+y*(int)a.dimX+(int)a.dimX-1)[0]);
                     DataB2=_mm256_set1_ps((b.data+y*(int)a.dimX+(int)a.dimX-1)[0]);
                 }
-                else if (x + offset+8 >= 0 && x + offset + 15 <= a.dimX - 1)
+                else if (x + offset+8 >= 0 && x + offset + 15 <= (int)a.dimX - 1)
                 {
                     DataR2 = _mm256_loadu_ps(r.data+y*(int)a.dimX+x+offset+8);
                     DataG2 = _mm256_loadu_ps(g.data+y*(int)a.dimX+x+offset+8);
@@ -332,10 +331,14 @@ Image gb_h(Image a, Image r,Image g,Image b,FVec gv)
                     (b.data+pixel3)[0],(b.data+pixel4)[0],(b.data+pixel5)[0],(b.data+pixel6)[0],\
                     (b.data+pixel7)[0]);
                 }
+
+                DataR2 = _mm256_mul_ps(DataR2, Data);
+                DataG2 = _mm256_mul_ps(DataG2, Data);
+                DataB2 = _mm256_mul_ps(DataB2, Data);
                 
-                Sum0256 = _mm256_add_ps(_mm256_mul_ps(DataR2, Data), Sum0256);
-                Sum1256 = _mm256_add_ps(_mm256_mul_ps(DataG2, Data), Sum1256);
-                Sum2256 = _mm256_add_ps(_mm256_mul_ps(DataB2, Data), Sum2256);
+                Sum0256 = _mm256_add_ps(DataR2, Sum0256);
+                Sum1256 = _mm256_add_ps(DataG2, Sum1256);
+                Sum2256 = _mm256_add_ps(DataB2, Sum2256);
             }
                 _mm256_storeu_ps(Sum0[0],Sum0256);
                 _mm256_storeu_ps(Sum0[1],Sum1256);
@@ -345,7 +348,7 @@ Image gb_h(Image a, Image r,Image g,Image b,FVec gv)
                 Sum[1] += Sum0[1][0]+Sum0[1][1]+Sum0[1][2]+Sum0[1][3]+Sum0[1][4]+Sum0[1][5]+Sum0[1][6]+Sum0[1][7];
                 Sum[2] += Sum0[2][0]+Sum0[2][1]+Sum0[2][2]+Sum0[2][3]+Sum0[2][4]+Sum0[2][5]+Sum0[2][6]+Sum0[2][7];
                 
-            for (int i = (gv.length-2*deta)/16*16+deta;i<gv.length-deta; ++i){
+            for (int i = (gv.length-2*deta)/UNROLLING*UNROLLING+deta;i<(int)gv.length-(int)deta; ++i){
                 offset = i - ext;
                 float data = gv.data[i];
                 float * add = get_pixel(a, x + offset, y);
