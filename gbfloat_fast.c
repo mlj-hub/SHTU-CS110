@@ -20,7 +20,7 @@
 
 #define BLOCK_SIZE 16
 #define BIT_SIZE 256
-#define UNROLLING 16
+#define UNROLLING 8
 
 typedef struct FVec
 {
@@ -53,7 +53,7 @@ Image transpose(Image a){
 
     omp_set_num_threads(max_threads);
     // #pragma omp parallel for
-    #pragma omp parallel for 
+    #pragma omp parallel for schedule(dynamic)
     for(int x=0;x<(int)a.dimX;x+=BLOCK_SIZE){
         for(int y=0;y<(int)a.dimY;y+=BLOCK_SIZE){
             for(int X = x;X<x+BLOCK_SIZE&&X<(int)a.dimX;++X){
@@ -77,7 +77,7 @@ void get_RGB(Image a,Image * r,Image * g,Image*b){
     int max_threads = omp_get_max_threads();
     omp_set_num_threads(max_threads);
     // #pragma omp parallel for
-    #pragma omp parallel for 
+    #pragma omp parallel for schedule(dynamic)
     for(int y=0;y<(int)a.dimY;y+=BLOCK_SIZE)
     {
         for(int x=0;x<(int)a.dimX;x+=BLOCK_SIZE)
@@ -218,7 +218,7 @@ Image gb_h(Image a, Image r,Image g,Image b,FVec gv)
 // parallel
     int max_threads = omp_get_max_threads();
     omp_set_num_threads(max_threads);
-    # pragma omp parallel for
+    # pragma omp parallel for schedule(dynamic)
     for (int y = 0; y < (int)a.dimY; ++y)
     {
         for (int x = 0; x < (int)a.dimX; ++x)
@@ -249,7 +249,7 @@ Image gb_h(Image a, Image r,Image g,Image b,FVec gv)
                 __m256 DataR2;
                 __m256 DataG2;
                 __m256 DataB2;
-                
+                                
                 if(x+offset+7<=0){
                     DataR=_mm256_set1_ps((r.data+y*(int)a.dimX)[0]);
                     DataG=_mm256_set1_ps((g.data+y*(int)a.dimX)[0]);
@@ -289,10 +289,11 @@ Image gb_h(Image a, Image r,Image g,Image b,FVec gv)
                 DataR = _mm256_mul_ps(DataR, Data);
                 DataG = _mm256_mul_ps(DataG, Data);
                 DataB = _mm256_mul_ps(DataB, Data);
+
                 Sum0256 = _mm256_add_ps(DataR, Sum0256);
                 Sum1256 = _mm256_add_ps(DataG, Sum1256);
                 Sum2256 = _mm256_add_ps(DataB, Sum2256);
-
+                /*
                 Data = _mm256_loadu_ps(gv.data+i+8);
 
                 if(x+offset+15<=0){
@@ -335,10 +336,107 @@ Image gb_h(Image a, Image r,Image g,Image b,FVec gv)
                 DataR2 = _mm256_mul_ps(DataR2, Data);
                 DataG2 = _mm256_mul_ps(DataG2, Data);
                 DataB2 = _mm256_mul_ps(DataB2, Data);
-                
+
                 Sum0256 = _mm256_add_ps(DataR2, Sum0256);
                 Sum1256 = _mm256_add_ps(DataG2, Sum1256);
                 Sum2256 = _mm256_add_ps(DataB2, Sum2256);
+                //######################################################################
+                Data = _mm256_loadu_ps(gv.data+i+16);
+
+                if(x+offset+23<=0){
+                    DataR=_mm256_set1_ps((r.data+y*(int)a.dimX)[0]);
+                    DataG=_mm256_set1_ps((g.data+y*(int)a.dimX)[0]);
+                    DataB=_mm256_set1_ps((b.data+y*(int)a.dimX)[0]);
+                }
+                else if (x+offset+16>=(int)a.dimX-1){
+                    DataR=_mm256_set1_ps((r.data+y*(int)a.dimX+(int)a.dimX-1)[0]);
+                    DataG=_mm256_set1_ps((g.data+y*(int)a.dimX+(int)a.dimX-1)[0]);
+                    DataB=_mm256_set1_ps((b.data+y*(int)a.dimX+(int)a.dimX-1)[0]);
+                }
+                else if (x + offset+16 >= 0 && x + offset + 23 <=(int) a.dimX - 1)
+                {
+                    DataR = _mm256_loadu_ps(r.data+y*(int)a.dimX+x+offset+16);
+                    DataG = _mm256_loadu_ps(g.data+y*(int)a.dimX+x+offset+16);
+                    DataB = _mm256_loadu_ps(b.data+y*(int)a.dimX+x+offset+16);
+                }
+                else
+                {
+                    pixel0=get_pixel_h(a.dimX,x+offset+16,y);
+                    pixel1=get_pixel_h(a.dimX,x+offset+17,y);
+                    pixel2=get_pixel_h(a.dimX,x+offset+18,y);
+                    pixel3=get_pixel_h(a.dimX,x+offset+19,y);
+                    pixel4=get_pixel_h(a.dimX,x+offset+20,y);
+                    pixel5=get_pixel_h(a.dimX,x+offset+21,y);
+                    pixel6=get_pixel_h(a.dimX,x+offset+22,y);
+                    pixel7=get_pixel_h(a.dimX,x+offset+23,y);
+                    DataR = _mm256_setr_ps((r.data+pixel0)[0],(r.data+pixel1)[0],(r.data+pixel2)[0],\
+                    (r.data+pixel3)[0],(r.data+pixel4)[0],(r.data+pixel5)[0],(r.data+pixel6)[0],\
+                    (r.data+pixel7)[0]);
+                    DataG = _mm256_setr_ps((g.data+pixel0)[0],(g.data+pixel1)[0],(g.data+pixel2)[0],\
+                    (g.data+pixel3)[0],(g.data+pixel4)[0],(g.data+pixel5)[0],(g.data+pixel6)[0],\
+                    (g.data+pixel7)[0]);
+                    DataB = _mm256_setr_ps((b.data+pixel0)[0],(b.data+pixel1)[0],(b.data+pixel2)[0],\
+                    (b.data+pixel3)[0],(b.data+pixel4)[0],(b.data+pixel5)[0],(b.data+pixel6)[0],\
+                    (b.data+pixel7)[0]);
+                }
+
+                DataR = _mm256_mul_ps(DataR, Data);
+                DataG = _mm256_mul_ps(DataG, Data);
+                DataB = _mm256_mul_ps(DataB, Data);
+
+                Sum0256 = _mm256_add_ps(DataR, Sum0256);
+                Sum1256 = _mm256_add_ps(DataG, Sum1256);
+                Sum2256 = _mm256_add_ps(DataB, Sum2256);
+
+
+                Data = _mm256_loadu_ps(gv.data+i+24);
+
+                if(x+offset+31<=0){
+                    DataR2=_mm256_set1_ps((r.data+y*(int)a.dimX)[0]);
+                    DataG2=_mm256_set1_ps((g.data+y*(int)a.dimX)[0]);
+                    DataB2=_mm256_set1_ps((b.data+y*(int)a.dimX)[0]);
+                }
+                else if (x+offset+24>=(int)a.dimX-1){
+                    DataR2=_mm256_set1_ps((r.data+y*(int)a.dimX+(int)a.dimX-1)[0]);
+                    DataG2=_mm256_set1_ps((g.data+y*(int)a.dimX+(int)a.dimX-1)[0]);
+                    DataB2=_mm256_set1_ps((b.data+y*(int)a.dimX+(int)a.dimX-1)[0]);
+                }
+                else if (x + offset+24 >= 0 && x + offset + 31 <=(int) a.dimX - 1)
+                {
+                    DataR2 = _mm256_loadu_ps(r.data+y*(int)a.dimX+x+offset+24);
+                    DataG2 = _mm256_loadu_ps(g.data+y*(int)a.dimX+x+offset+24);
+                    DataB2 = _mm256_loadu_ps(b.data+y*(int)a.dimX+x+offset+24);
+                }
+                else
+                {
+                    pixel0=get_pixel_h(a.dimX,x+offset+24,y);
+                    pixel1=get_pixel_h(a.dimX,x+offset+25,y);
+                    pixel2=get_pixel_h(a.dimX,x+offset+26,y);
+                    pixel3=get_pixel_h(a.dimX,x+offset+27,y);
+                    pixel4=get_pixel_h(a.dimX,x+offset+28,y);
+                    pixel5=get_pixel_h(a.dimX,x+offset+29,y);
+                    pixel6=get_pixel_h(a.dimX,x+offset+30,y);
+                    pixel7=get_pixel_h(a.dimX,x+offset+31,y);
+                    DataR2 = _mm256_setr_ps((r.data+pixel0)[0],(r.data+pixel1)[0],(r.data+pixel2)[0],\
+                    (r.data+pixel3)[0],(r.data+pixel4)[0],(r.data+pixel5)[0],(r.data+pixel6)[0],\
+                    (r.data+pixel7)[0]);
+                    DataG2 = _mm256_setr_ps((g.data+pixel0)[0],(g.data+pixel1)[0],(g.data+pixel2)[0],\
+                    (g.data+pixel3)[0],(g.data+pixel4)[0],(g.data+pixel5)[0],(g.data+pixel6)[0],\
+                    (g.data+pixel7)[0]);
+                    DataB2 = _mm256_setr_ps((b.data+pixel0)[0],(b.data+pixel1)[0],(b.data+pixel2)[0],\
+                    (b.data+pixel3)[0],(b.data+pixel4)[0],(b.data+pixel5)[0],(b.data+pixel6)[0],\
+                    (b.data+pixel7)[0]);
+                }
+
+                DataR2 = _mm256_mul_ps(DataR2, Data);
+                DataG2 = _mm256_mul_ps(DataG2, Data);
+                DataB2 = _mm256_mul_ps(DataB2, Data);
+
+                Sum0256 = _mm256_add_ps(DataR2, Sum0256);
+                Sum1256 = _mm256_add_ps(DataG2, Sum1256);
+                Sum2256 = _mm256_add_ps(DataB2, Sum2256);
+                */
+
             }
                 _mm256_storeu_ps(Sum0[0],Sum0256);
                 _mm256_storeu_ps(Sum0[1],Sum1256);
