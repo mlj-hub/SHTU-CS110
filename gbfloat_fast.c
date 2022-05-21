@@ -19,6 +19,7 @@
 #define PI 3.14159
 
 #define BLOCK_SIZE 16
+#define BIT_SIZE 256
 
 typedef struct FVec
 {
@@ -47,6 +48,10 @@ Image img_copy(Image a)
 
 Image transpose(Image a){
     Image b = img_copy(a);
+    int max_threads = omp_get_max_threads();
+
+    omp_set_num_threads(max_threads);
+    // #pragma omp parallel for
     #pragma omp parallel for 
     for(int x=0;x<a.dimX;x+=BLOCK_SIZE){
         for(int y=0;y<a.dimY;y+=BLOCK_SIZE){
@@ -68,11 +73,18 @@ void get_RGB(Image a,Image * r,Image * g,Image*b){
     r->data = malloc(a.dimX*a.dimY*sizeof(float));
     g->data = malloc(a.dimX*a.dimY*sizeof(float));
     b->data = malloc(a.dimX*a.dimY*sizeof(float));
+    int max_threads = omp_get_max_threads();
+    omp_set_num_threads(max_threads);
+    // #pragma omp parallel for
     #pragma omp parallel for 
-    for(int x=0;x<a.dimX;x+=BLOCK_SIZE){
-        for(int y=0;y<a.dimY;y+=BLOCK_SIZE){
-            for(int X = x;X<x+BLOCK_SIZE&&X<a.dimX;++X){
-                for(int Y = y;Y<y+BLOCK_SIZE&&Y<a.dimY;++Y){
+    for(int y=0;y<a.dimY;y+=BLOCK_SIZE)
+    {
+        for(int x=0;x<a.dimX;x+=BLOCK_SIZE)
+        {
+            for(int Y = y;Y<y+BLOCK_SIZE&&Y<a.dimY;++Y)
+            {
+                for(int X = x;X<x+BLOCK_SIZE&&X<a.dimX;++X)
+                {
                     (r->data+(Y*a.dimX+X))[0]=(a.data+3*(Y*a.dimX+X))[0];
                     (g->data+(Y*a.dimX+X))[0]=(a.data+3*(Y*a.dimX+X))[1];
                     (b->data+(Y*a.dimX+X))[0]=(a.data+3*(Y*a.dimX+X))[2];
@@ -227,15 +239,20 @@ Image gb_h(Image a, Image r,Image g,Image b,FVec gv)
             __m256 Sum1256 = _mm256_setzero_ps();
             __m256 Sum2256 = _mm256_setzero_ps();
 
-            for (int i = deta; i < (gv.length-2*deta)/8*8+deta; i+=8)
+            for (int i = deta; i < (gv.length-2*deta)/16*16+deta; i+=16)
             {
                 offset = i - ext;
                 int pixel0,pixel1,pixel2,pixel3,pixel4,pixel5,pixel6,pixel7;
+                __m256 Data = _mm256_loadu_ps(gv.data + i);
 
                 __m256 DataR;
                 __m256 DataG;
                 __m256 DataB;
 
+                __m256 DataR2;
+                __m256 DataG2;
+                __m256 DataB2;
+                
                 if(x+offset+7<=0){
                     DataR=_mm256_set1_ps((r.data+y*(int)a.dimX)[0]);
                     DataG=_mm256_set1_ps((g.data+y*(int)a.dimX)[0]);
@@ -273,11 +290,52 @@ Image gb_h(Image a, Image r,Image g,Image b,FVec gv)
                     (b.data+pixel7)[0]);
                 }
                 
-                __m256 Data = _mm256_loadu_ps(gv.data + i);
-
                 Sum0256 = _mm256_add_ps(_mm256_mul_ps(DataR, Data), Sum0256);
                 Sum1256 = _mm256_add_ps(_mm256_mul_ps(DataG, Data), Sum1256);
                 Sum2256 = _mm256_add_ps(_mm256_mul_ps(DataB, Data), Sum2256);
+
+                Data = _mm256_loadu_ps(gv.data+i+8);
+
+                if(x+offset+15<=0){
+                    DataR2=_mm256_set1_ps((r.data+y*(int)a.dimX)[0]);
+                    DataG2=_mm256_set1_ps((g.data+y*(int)a.dimX)[0]);
+                    DataB2=_mm256_set1_ps((b.data+y*(int)a.dimX)[0]);
+                }
+                else if (x+offset+8>=(int)a.dimX-1){
+                    DataR2=_mm256_set1_ps((r.data+y*(int)a.dimX+(int)a.dimX-1)[0]);
+                    DataG2=_mm256_set1_ps((g.data+y*(int)a.dimX+(int)a.dimX-1)[0]);
+                    DataB2=_mm256_set1_ps((b.data+y*(int)a.dimX+(int)a.dimX-1)[0]);
+                }
+                else if (x + offset+8 >= 0 && x + offset + 15 <= a.dimX - 1)
+                {
+                    DataR2 = _mm256_loadu_ps(r.data+y*(int)a.dimX+x+offset+8);
+                    DataG2 = _mm256_loadu_ps(g.data+y*(int)a.dimX+x+offset+8);
+                    DataB2 = _mm256_loadu_ps(b.data+y*(int)a.dimX+x+offset+8);
+                }
+                else
+                {
+                    pixel0=get_pixel_h(a.dimX,x+offset+8,y);
+                    pixel1=get_pixel_h(a.dimX,x+offset+9,y);
+                    pixel2=get_pixel_h(a.dimX,x+offset+10,y);
+                    pixel3=get_pixel_h(a.dimX,x+offset+11,y);
+                    pixel4=get_pixel_h(a.dimX,x+offset+12,y);
+                    pixel5=get_pixel_h(a.dimX,x+offset+13,y);
+                    pixel6=get_pixel_h(a.dimX,x+offset+14,y);
+                    pixel7=get_pixel_h(a.dimX,x+offset+15,y);
+                    DataR2 = _mm256_setr_ps((r.data+pixel0)[0],(r.data+pixel1)[0],(r.data+pixel2)[0],\
+                    (r.data+pixel3)[0],(r.data+pixel4)[0],(r.data+pixel5)[0],(r.data+pixel6)[0],\
+                    (r.data+pixel7)[0]);
+                    DataG2 = _mm256_setr_ps((g.data+pixel0)[0],(g.data+pixel1)[0],(g.data+pixel2)[0],\
+                    (g.data+pixel3)[0],(g.data+pixel4)[0],(g.data+pixel5)[0],(g.data+pixel6)[0],\
+                    (g.data+pixel7)[0]);
+                    DataB2 = _mm256_setr_ps((b.data+pixel0)[0],(b.data+pixel1)[0],(b.data+pixel2)[0],\
+                    (b.data+pixel3)[0],(b.data+pixel4)[0],(b.data+pixel5)[0],(b.data+pixel6)[0],\
+                    (b.data+pixel7)[0]);
+                }
+                
+                Sum0256 = _mm256_add_ps(_mm256_mul_ps(DataR2, Data), Sum0256);
+                Sum1256 = _mm256_add_ps(_mm256_mul_ps(DataG2, Data), Sum1256);
+                Sum2256 = _mm256_add_ps(_mm256_mul_ps(DataB2, Data), Sum2256);
             }
                 _mm256_storeu_ps(Sum0[0],Sum0256);
                 _mm256_storeu_ps(Sum0[1],Sum1256);
@@ -287,7 +345,7 @@ Image gb_h(Image a, Image r,Image g,Image b,FVec gv)
                 Sum[1] += Sum0[1][0]+Sum0[1][1]+Sum0[1][2]+Sum0[1][3]+Sum0[1][4]+Sum0[1][5]+Sum0[1][6]+Sum0[1][7];
                 Sum[2] += Sum0[2][0]+Sum0[2][1]+Sum0[2][2]+Sum0[2][3]+Sum0[2][4]+Sum0[2][5]+Sum0[2][6]+Sum0[2][7];
                 
-            for (int i = (gv.length-2*deta)/8*8+deta;i<gv.length-deta; ++i){
+            for (int i = (gv.length-2*deta)/16*16+deta;i<gv.length-deta; ++i){
                 offset = i - ext;
                 float data = gv.data[i];
                 float * add = get_pixel(a, x + offset, y);
@@ -409,24 +467,56 @@ Image gb_v(Image a, FVec gv)
 
 Image apply_gb(Image a, FVec gv)
 {
-    // struct timeval start_time, stop_time, elapsed_time; 
-    // gettimeofday(&start_time,NULL);
+    struct timeval start_time, stop_time, elapsed_time; 
+    gettimeofday(&start_time,NULL);
+
     Image r,g,b;
     get_RGB(a,&r,&g,&b);
-    Image o = gb_h(a,r,g,b,gv);
-    // gettimeofday(&stop_time,NULL);
-    // timersub(&stop_time, &start_time, &elapsed_time); 
-    // printf("gb_h time: %f \n", elapsed_time.tv_sec+elapsed_time.tv_usec/1000000.0);
+    
+    gettimeofday(&stop_time,NULL);
+    timersub(&stop_time, &start_time, &elapsed_time); 
+    printf("RGB change time1: %f \n", elapsed_time.tv_sec+elapsed_time.tv_usec/1000000.0);
 
-    // gettimeofday(&start_time,NULL);
+    gettimeofday(&start_time,NULL);
+
+    Image o = gb_h(a,r,g,b,gv);
+
+    gettimeofday(&stop_time,NULL);
+    timersub(&stop_time, &start_time, &elapsed_time); 
+    printf("gb_h time: %f \n", elapsed_time.tv_sec+elapsed_time.tv_usec/1000000.0);
+
+    gettimeofday(&start_time,NULL);
+
     Image test = transpose(o);
+    gettimeofday(&stop_time,NULL);
+    timersub(&stop_time, &start_time, &elapsed_time); 
+    printf("transpose time: %f \n", elapsed_time.tv_sec+elapsed_time.tv_usec/1000000.0);
+
+
+    gettimeofday(&start_time,NULL);
+
     Image rt,gt,bt;
     get_RGB(test,&rt,&gt,&bt);
+
+    gettimeofday(&stop_time,NULL);
+    timersub(&stop_time, &start_time, &elapsed_time); 
+    printf("RGB change time2: %f \n", elapsed_time.tv_sec+elapsed_time.tv_usec/1000000.0);
+
+    gettimeofday(&start_time,NULL);
+
     test = gb_h(test,rt,gt,bt,gv);
+
+    gettimeofday(&stop_time,NULL);
+    timersub(&stop_time, &start_time, &elapsed_time); 
+    printf("gb_v: %f \n", elapsed_time.tv_sec+elapsed_time.tv_usec/1000000.0);
+
+    gettimeofday(&start_time,NULL);
+
     Image c = transpose(test);
-    // gettimeofday(&stop_time,NULL);
-    // timersub(&stop_time, &start_time, &elapsed_time); 
-    // printf("gb_v time: %f \n", elapsed_time.tv_sec+elapsed_time.tv_usec/1000000.0);
+
+    gettimeofday(&stop_time,NULL);
+    timersub(&stop_time, &start_time, &elapsed_time); 
+    printf("transpose time: %f \n", elapsed_time.tv_sec+elapsed_time.tv_usec/1000000.0);
 
     free(b.data);
     free(test.data);
@@ -452,6 +542,15 @@ int main(int argc, char** argv)
     sscanf(argv[6], "%u", &dim);
     sscanf(argv[7], "%u", &min_dim);
 
+    for (int i=0;i<19;i++){
+        FVec v = make_gv(a, x0, x1, dim, min_dim);
+        Image img;
+        img.data = stbi_loadf(argv[1], &(img.dimX), &(img.dimY), &(img.numChannels), 0);
+        Image imgOut = apply_gb(img, v);
+        stbi_write_jpg(argv[2], imgOut.dimX, imgOut.dimY, imgOut.numChannels, imgOut.data, 90);
+        printf("-------------------\n");
+    }
+
     // struct timeval start_time1, stop_time1, elapsed_time1; 
     // gettimeofday(&start_time1,NULL);
     FVec v = make_gv(a, x0, x1, dim, min_dim);
@@ -467,7 +566,7 @@ int main(int argc, char** argv)
     stbi_write_jpg(argv[2], imgOut.dimX, imgOut.dimY, imgOut.numChannels, imgOut.data, 90);
     gettimeofday(&stop_time,NULL);
     timersub(&stop_time, &start_time, &elapsed_time); 
-    printf("%f \n", elapsed_time.tv_sec+elapsed_time.tv_usec/1000000.0);
+    printf("%f \n", (elapsed_time.tv_sec+elapsed_time.tv_usec/1000000.0)/20.0f);
     free(imgOut.data);
     free(v.data);
     free(v.sum);
