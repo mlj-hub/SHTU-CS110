@@ -467,56 +467,56 @@ Image gb_v(Image a, FVec gv)
 
 Image apply_gb(Image a, FVec gv)
 {
-    struct timeval start_time, stop_time, elapsed_time; 
-    gettimeofday(&start_time,NULL);
+    // struct timeval start_time, stop_time, elapsed_time; 
+    // gettimeofday(&start_time,NULL);
 
     Image r,g,b;
     get_RGB(a,&r,&g,&b);
     
-    gettimeofday(&stop_time,NULL);
-    timersub(&stop_time, &start_time, &elapsed_time); 
-    printf("RGB change time1: %f \n", elapsed_time.tv_sec+elapsed_time.tv_usec/1000000.0);
+    // gettimeofday(&stop_time,NULL);
+    // timersub(&stop_time, &start_time, &elapsed_time); 
+    // printf("RGB change time1: %f \n", elapsed_time.tv_sec+elapsed_time.tv_usec/1000000.0);
 
-    gettimeofday(&start_time,NULL);
+    // gettimeofday(&start_time,NULL);
 
     Image o = gb_h(a,r,g,b,gv);
 
-    gettimeofday(&stop_time,NULL);
-    timersub(&stop_time, &start_time, &elapsed_time); 
-    printf("gb_h time: %f \n", elapsed_time.tv_sec+elapsed_time.tv_usec/1000000.0);
+    // gettimeofday(&stop_time,NULL);
+    // timersub(&stop_time, &start_time, &elapsed_time); 
+    // printf("gb_h time: %f \n", elapsed_time.tv_sec+elapsed_time.tv_usec/1000000.0);
 
-    gettimeofday(&start_time,NULL);
+    // gettimeofday(&start_time,NULL);
 
     Image test = transpose(o);
-    gettimeofday(&stop_time,NULL);
-    timersub(&stop_time, &start_time, &elapsed_time); 
-    printf("transpose time: %f \n", elapsed_time.tv_sec+elapsed_time.tv_usec/1000000.0);
+    // gettimeofday(&stop_time,NULL);
+    // timersub(&stop_time, &start_time, &elapsed_time); 
+    // printf("transpose time: %f \n", elapsed_time.tv_sec+elapsed_time.tv_usec/1000000.0);
 
 
-    gettimeofday(&start_time,NULL);
+    // gettimeofday(&start_time,NULL);
 
     Image rt,gt,bt;
     get_RGB(test,&rt,&gt,&bt);
 
-    gettimeofday(&stop_time,NULL);
-    timersub(&stop_time, &start_time, &elapsed_time); 
-    printf("RGB change time2: %f \n", elapsed_time.tv_sec+elapsed_time.tv_usec/1000000.0);
+    // gettimeofday(&stop_time,NULL);
+    // timersub(&stop_time, &start_time, &elapsed_time); 
+    // printf("RGB change time2: %f \n", elapsed_time.tv_sec+elapsed_time.tv_usec/1000000.0);
 
-    gettimeofday(&start_time,NULL);
+    // gettimeofday(&start_time,NULL);
 
     test = gb_h(test,rt,gt,bt,gv);
 
-    gettimeofday(&stop_time,NULL);
-    timersub(&stop_time, &start_time, &elapsed_time); 
-    printf("gb_v: %f \n", elapsed_time.tv_sec+elapsed_time.tv_usec/1000000.0);
+    // gettimeofday(&stop_time,NULL);
+    // timersub(&stop_time, &start_time, &elapsed_time); 
+    // printf("gb_v: %f \n", elapsed_time.tv_sec+elapsed_time.tv_usec/1000000.0);
 
-    gettimeofday(&start_time,NULL);
+    // gettimeofday(&start_time,NULL);
 
     Image c = transpose(test);
 
-    gettimeofday(&stop_time,NULL);
-    timersub(&stop_time, &start_time, &elapsed_time); 
-    printf("transpose time: %f \n", elapsed_time.tv_sec+elapsed_time.tv_usec/1000000.0);
+    // gettimeofday(&stop_time,NULL);
+    // timersub(&stop_time, &start_time, &elapsed_time); 
+    // printf("transpose time: %f \n", elapsed_time.tv_sec+elapsed_time.tv_usec/1000000.0);
 
     free(b.data);
     free(test.data);
@@ -542,14 +542,14 @@ int main(int argc, char** argv)
     sscanf(argv[6], "%u", &dim);
     sscanf(argv[7], "%u", &min_dim);
 
-    for (int i=0;i<19;i++){
-        FVec v = make_gv(a, x0, x1, dim, min_dim);
-        Image img;
-        img.data = stbi_loadf(argv[1], &(img.dimX), &(img.dimY), &(img.numChannels), 0);
-        Image imgOut = apply_gb(img, v);
-        stbi_write_jpg(argv[2], imgOut.dimX, imgOut.dimY, imgOut.numChannels, imgOut.data, 90);
-        printf("-------------------\n");
-    }
+    // for (int i=0;i<19;i++){
+    //     FVec v = make_gv(a, x0, x1, dim, min_dim);
+    //     Image img;
+    //     img.data = stbi_loadf(argv[1], &(img.dimX), &(img.dimY), &(img.numChannels), 0);
+    //     Image imgOut = apply_gb(img, v);
+    //     stbi_write_jpg(argv[2], imgOut.dimX, imgOut.dimY, imgOut.numChannels, imgOut.data, 90);
+    //     printf("-------------------\n");
+    // }
 
     // struct timeval start_time1, stop_time1, elapsed_time1; 
     // gettimeofday(&start_time1,NULL);
@@ -566,7 +566,7 @@ int main(int argc, char** argv)
     stbi_write_jpg(argv[2], imgOut.dimX, imgOut.dimY, imgOut.numChannels, imgOut.data, 90);
     gettimeofday(&stop_time,NULL);
     timersub(&stop_time, &start_time, &elapsed_time); 
-    printf("%f \n", (elapsed_time.tv_sec+elapsed_time.tv_usec/1000000.0)/20.0f);
+    printf("%f \n", elapsed_time.tv_sec+elapsed_time.tv_usec/1000000.0f);
     free(imgOut.data);
     free(v.data);
     free(v.sum);
