@@ -209,21 +209,21 @@ Image gb_h(Image a, FVec gv)
 
                 float * add0,* add1,* add2,* add3,* add4,* add5,* add6,* add7;
 
-                if(x+offset+7<=0)
-                    add0=add1=add2=add3=add4=add5=add6=add7=get_pixel(a,x+offset,y);
-                else if(x+offset>=a.dimX-1)
-                    add0=add1=add2=add3=add4=add5=add6=add7=get_pixel(a,x+offset,y);
-                else if(x+offset>=0 && x+offset+7<=a.dimX-1){
-                    add0 = get_pixel(a,x+offset,y);
-                    add1 = add0+3;
-                    add2 = add0+6;
-                    add3 = add0+9;
-                    add4 = add0+12;
-                    add5 = add0+15;
-                    add6 = add0+18;
-                    add7 = add0+21;
-                }
-                else{
+                // if(x+offset+7<=0)
+                //     add0=add1=add2=add3=add4=add5=add6=add7=get_pixel(a,x+offset,y);
+                // else if(x+offset>=a.dimX-1)
+                //     add0=add1=add2=add3=add4=add5=add6=add7=get_pixel(a,x+offset,y);
+                // else if(x+offset>=0 && x+offset+7<=a.dimX-1){
+                //     add0 = get_pixel(a,x+offset,y);
+                //     add1 = add0+3;
+                //     add2 = add0+6;
+                //     add3 = add0+9;
+                //     add4 = add0+12;
+                //     add5 = add0+15;
+                //     add6 = add0+18;
+                //     add7 = add0+21;
+                // }
+                // else{
                     add0 = get_pixel(a,x+offset,y);
                     add1 = get_pixel(a,x+offset+1,y);
                     add2 = get_pixel(a,x+offset+2,y);
@@ -232,7 +232,7 @@ Image gb_h(Image a, FVec gv)
                     add5 = get_pixel(a,x+offset+5,y);
                     add6 = get_pixel(a,x+offset+6,y);
                     add7 = get_pixel(a,x+offset+7,y);
-                }
+                // }
                 
                 __m256 Data = _mm256_loadu_ps(gv.data+i);
 
@@ -377,22 +377,22 @@ Image gb_v(Image a, FVec gv)
                 float * add6 ;
                 float * add7 ;
 
-                if(y+offset+7<=0)
-                    add0=add1=add2=add3=add4=add5=add6=add7=get_pixel(a,x,y+offset);
-                else if(y+offset>=a.dimY-1)
-                    add0=add1=add2=add3=add4=add5=add6=add7=get_pixel(a,x,y+offset);
-                else if(y+offset>=0 && y+offset+7<=a.dimY-1){
-                    add0 = get_pixel(a,x,y+offset);
-                    add1 = add0+3*a.dimX;
-                    add2 = add0+6*a.dimX;
-                    add3 = add0+9*a.dimX;
-                    add4 = add0+12*a.dimX;
-                    add5 = add0+15*a.dimX;
-                    add6 = add0+18*a.dimX;
-                    add7 = add0+21*a.dimX;
+                // if(y+offset+7<=0)
+                //     add0=add1=add2=add3=add4=add5=add6=add7=get_pixel(a,x,y+offset);
+                // else if(y+offset>=a.dimY-1)
+                //     add0=add1=add2=add3=add4=add5=add6=add7=get_pixel(a,x,y+offset);
+                // else if(y+offset>=0 && y+offset+7<=a.dimY-1){
+                //     add0 = get_pixel(a,x,y+offset);
+                //     add1 = add0+3*a.dimX;
+                //     add2 = add0+6*a.dimX;
+                //     add3 = add0+9*a.dimX;
+                //     add4 = add0+12*a.dimX;
+                //     add5 = add0+15*a.dimX;
+                //     add6 = add0+18*a.dimX;
+                //     add7 = add0+21*a.dimX;
                     
-                }
-                else{
+                // }
+                // else{
                     add0 = get_pixel(a,x,y+offset);
                     add1 = get_pixel(a,x,y+offset+1);
                     add2 = get_pixel(a,x,y+offset+2);
@@ -401,7 +401,7 @@ Image gb_v(Image a, FVec gv)
                     add5 = get_pixel(a,x,y+offset+5);
                     add6 = get_pixel(a,x,y+offset+6);
                     add7 = get_pixel(a,x,y+offset+7);
-                }
+                // }
                 
                 __m256 Data = _mm256_loadu_ps(gv.data+i);
 
