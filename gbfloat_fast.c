@@ -35,6 +35,33 @@ typedef struct Image
     float* data;
 } Image;
 
+
+Image img_copy(Image a)
+{
+    Image b = a;
+    b.dimX = a.dimY;
+    b.dimY = a.dimX;
+    b.data = malloc(b.dimX * b.dimY * b.numChannels * sizeof(float));
+    return b;
+}
+
+Image transpose(Image a){
+    Image b = img_copy(a);
+    #pragma omp parallel for 
+    for(int x=0;x<a.dimX;x+=BLOCK_SIZE){
+        for(int y=0;y<a.dimY;y+=BLOCK_SIZE){
+            for(int X = x;X<x+BLOCK_SIZE&&X<a.dimX;++X){
+                for(int Y = y;Y<y+BLOCK_SIZE&&Y<a.dimY;++Y){
+                    (b.data+3*(X*b.dimX+Y))[0]=(a.data+3*(Y*a.dimX+X))[0];
+                    (b.data+3*(X*b.dimX+Y))[1]=(a.data+3*(Y*a.dimX+X))[1];
+                    (b.data+3*(X*b.dimX+Y))[2]=(a.data+3*(Y*a.dimX+X))[2];
+                }
+            }
+        }
+    }
+    return b;
+}
+
 void normalize_FVec(FVec v)
 {
     // float sum = 0.0;
@@ -151,40 +178,9 @@ Image gb_h(Image a, FVec gv)
 
     int ext = gv.length / 2;
 
-    // int max_threads = omp_get_max_threads();
-    // omp_set_num_threads(max_threads);
-    // # pragma omp parallel for
-    // for (y = 0; y < a.dimY; y+=BLOCK_SIZE)
-    // {
-    //     for (x = 0; x < a.dimX; x+=BLOCK_SIZE)
-    //     {
-    //         for(int Y=y;Y<y+BLOCK_SIZE&&Y<a.dimY;++Y)
-    //         {
-    //             for(int X=x;X<x+BLOCK_SIZE&&X<a.dimX;++X)
-    //             {
-    //                 pc = get_pixel(b, X, Y);
-    //                 unsigned int deta = fmin(fmin(a.dimY-Y-1, Y),fmin(a.dimX-X-1, X));
-    //                 deta = fmin(deta, gv.min_deta);
-    //                 float Sum[3] = {0,0,0};
-    //                 for (i = deta; i < gv.length-deta; ++i)
-    //                 {
-    //                     offset = i - ext;
-    //                     Sum[0] += gv.data[i]/gv.sum[ext - deta] * (float)get_pixel(a, X + offset, Y)[0];
-    //                     Sum[1] += gv.data[i]/gv.sum[ext - deta] * (float)get_pixel(a, X + offset, Y)[1];
-    //                     Sum[2] += gv.data[i]/gv.sum[ext - deta] * (float)get_pixel(a, X + offset, Y)[2];
-    //                 }
-    //                 pc[0] = Sum[0];
-    //                 pc[1] = Sum[1];
-    //                 pc[2] = Sum[2];
-    //             }
-    //         }
-    //     }
-    // }
-
 // parallel
     int max_threads = omp_get_max_threads();
     omp_set_num_threads(max_threads);
-    //omp_set_num_threads(2);
     # pragma omp parallel for
     for (int y = 0; y < a.dimY; ++y)
     {
@@ -277,78 +273,12 @@ Image gb_h(Image a, FVec gv)
 Image gb_v(Image a, FVec gv)
 {
     Image b = img_sc(a);
-
     int ext = gv.length / 2;
-
-// cache blocking 
-//     int max_threads = omp_get_max_threads();
-//     omp_set_num_threads(max_threads);
-//     # pragma omp parallel for
-//     for (unsigned int x = 0; x < a.dimX; x+=BLOCK_SIZE)
-//     {
-//         for (unsigned int y = 0; y < a.dimY; y+=BLOCK_SIZE)
-//         {
-//             for(int Y=y;Y<y+BLOCK_SIZE&&Y<a.dimY;++Y)
-//             {
-//                 for(int X=x;X<x+BLOCK_SIZE&&X<a.dimX;++X)
-//                 {
-//                     float* pc = get_pixel(b, X, Y);
-//                     unsigned int deta = fmin(fmin(a.dimY-Y-1, Y),fmin(a.dimX-X-1, X));
-//                     deta = fmin(deta, gv.min_deta);
-//                     float Sum[3] = {0,0,0};
-//                     int offset;
-//                     for (int i = deta; i < gv.length-deta; ++i)
-//                     {
-//                         offset = i - ext;
-//                         Sum[0] += gv.data[i] /gv.sum[ext - deta] * (float)get_pixel(a, X, Y + offset)[0];
-//                         Sum[1] += gv.data[i] /gv.sum[ext - deta] * (float)get_pixel(a, X, Y + offset)[1];
-//                         Sum[2] += gv.data[i] /gv.sum[ext - deta] * (float)get_pixel(a, X, Y + offset)[2];
-//                     }
-//                     pc[0] = Sum[0];
-//                     pc[1] = Sum[1];
-//                     pc[2] = Sum[2];
-//                 }
-//             }
-//         }
-//     }
-
-// another cache blocking (just for testing )
-    // int max_threads = omp_get_max_threads();
-    // omp_set_num_threads(max_threads);
-    // # pragma omp parallel for
-    // for (x = 0; x < a.dimX; x+=BLOCK_SIZE)
-    // {
-    //     for (y = 0; y < a.dimY; y+=BLOCK_SIZE)
-    //     {
-    //         for(int Y=y;Y<y+BLOCK_SIZE&&Y<a.dimY;++Y)
-    //         {
-    //             for(int X=x;X<x+BLOCK_SIZE&&X<a.dimX;++X)
-    //             {
-    //                 pc = get_pixel(b, X, Y);
-    //                 unsigned int deta = fmin(fmin(a.dimY-Y-1, Y),fmin(a.dimX-X-1, X));
-    //                 deta = fmin(deta, gv.min_deta);
-    //                 float Sum[3] = {0,0,0};
-    //                 for (i = deta; i < gv.length-deta; i+=BLOCK_SIZE)
-    //                 {
-    //                     for(int I = i;I<i+BLOCK_SIZE && I<gv.length-deta;++I){
-    //                         offset = I - ext;
-    //                         Sum[0] += gv.data[I] /gv.sum[ext - deta] * (float)get_pixel(a, X, Y + offset)[0];
-    //                         Sum[1] += gv.data[I] /gv.sum[ext - deta] * (float)get_pixel(a, X, Y + offset)[1];
-    //                         Sum[2] += gv.data[I] /gv.sum[ext - deta] * (float)get_pixel(a, X, Y + offset)[2];
-    //                     }
-    //                 }
-    //                 pc[0] = Sum[0];
-    //                 pc[1] = Sum[1];
-    //                 pc[2] = Sum[2];
-    //             }
-    //         }
-    //     }
-    // }
 
 // parallel and SIMD
     int max_threads = omp_get_max_threads();
     omp_set_num_threads(max_threads);
-#pragma omp parallel for
+    #pragma omp parallel for
     for (int x = 0; x < a.dimX; ++x)
     {
         for (int y = 0; y < a.dimY; ++y)
@@ -453,12 +383,15 @@ Image apply_gb(Image a, FVec gv)
     // printf("gb_h time: %f \n", elapsed_time.tv_sec+elapsed_time.tv_usec/1000000.0);
 
     // gettimeofday(&start_time,NULL);
-    Image c = gb_v(b, gv);
+    Image test = transpose(b);
+    test = gb_h(test,gv);
+    Image c = transpose(test);
     // gettimeofday(&stop_time,NULL);
     // timersub(&stop_time, &start_time, &elapsed_time); 
     // printf("gb_v time: %f \n", elapsed_time.tv_sec+elapsed_time.tv_usec/1000000.0);
 
     free(b.data);
+    free(test.data);
     return c;
 }
 
