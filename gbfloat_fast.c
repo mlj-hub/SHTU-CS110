@@ -204,7 +204,35 @@ Image gb_h(Image a, FVec gv)
                 offset = i - ext;
 
                 float *add0, *add1, *add2, *add3, *add4, *add5, *add6, *add7;
+                /*
+                float *add8;
+                float *add9;
+                float *add10;
+                float *add11;
+                float *add12;
+                float *add13;
+                float *add14;
+                float *add15;
+                
+                float *add16;
+                float *add17;
+                float *add18;
+                float *add19;
+                float *add20;
+                float *add21;
+                float *add22;
+                float *add23;
 
+                float *add24;
+                float *add25;
+                float *add26;
+                float *add27;
+                float *add28;
+                float *add29;
+                float *add30;
+                float *add31;
+                
+                */
                 if(x+offset+7<=0)
                     add0=add1=add2=add3=add4=add5=add6=add7=a.data+3*(y*a.dimX);
                 else if(x+offset>=(int)a.dimX-1)
@@ -231,8 +259,92 @@ Image gb_h(Image a, FVec gv)
                     add6 = get_pixel(a, x + offset + 6, y);
                     add7 = get_pixel(a, x + offset + 7, y);
                 }
-
+                /*
+                if(x+offset+15<=0)
+                    add8=add9=add10=add11=add12=add13=add14=add15=a.data+3*(y*a.dimX+8);
+                else if(x+offset+8>=(int)a.dimX-1)
+                    add8=add9=add10=add11=add12=add13=add14=add15=a.data+3*(y*a.dimX+(int)a.dimX-1);
+                if (x + offset+8 >= 0 && x + offset + 15 <= a.dimX - 1)
+                {
+                    add8 = a.data+3*(y*a.dimX+x+offset+8);
+                    add9 = add8 + 3;
+                    add10 = add8  + 6;
+                    add11 = add8 + 9;
+                    add12 = add8  + 12;
+                    add13 = add8  + 15;
+                    add14 = add8  + 18;
+                    add15 = add8  + 21;
+                }
+                else
+                {
+                    add8 = get_pixel(a, x + offset+8, y);
+                    add9 = get_pixel(a, x + offset + 9, y);
+                    add10 = get_pixel(a, x + offset + 10, y);
+                    add11 = get_pixel(a, x + offset + 11, y);
+                    add12 = get_pixel(a, x + offset + 12, y);
+                    add13 = get_pixel(a, x + offset + 13, y);
+                    add14 = get_pixel(a, x + offset + 14, y);
+                    add15 = get_pixel(a, x + offset + 15, y);
+                }
+                
+                if(x+offset+23<=0)
+                    add16=add17=add18=add19=add20=add21=add22=add23=a.data+3*(y*a.dimX+16);
+                else if(x+offset+16>=(int)a.dimX-1)
+                    add16=add17=add18=add19=add20=add21=add22=add23=a.data+3*(y*a.dimX+(int)a.dimX-1);
+                if (x + offset+16 >= 0 && x + offset + 23 <= a.dimX - 1)
+                {
+                    add16 = a.data+3*(y*a.dimX+x+offset+16);
+                    add17 = add16+ 3;
+                    add18 = add16  + 6;
+                    add19 = add16+ 9;
+                    add20 = add16  + 12;
+                    add21 = add16  + 15;
+                    add22 = add16  + 18;
+                    add23 = add16  + 21;
+                }
+                else
+                {
+                    add16 = get_pixel(a, x + offset+16, y);
+                    add17 = get_pixel(a, x + offset + 17, y);
+                    add18 = get_pixel(a, x + offset + 18, y);
+                    add19 = get_pixel(a, x + offset + 19, y);
+                    add20 = get_pixel(a, x + offset + 20, y);
+                    add21 = get_pixel(a, x + offset + 21, y);
+                    add22 = get_pixel(a, x + offset + 22, y);
+                    add23 = get_pixel(a, x + offset + 23, y);
+                }
+                if(x+offset+31<=0)
+                    add24=add25=add26=add27=add28=add29=add30=add31=a.data+3*(y*a.dimX+24);
+                else if(x+offset+24>=(int)a.dimX-1)
+                    add24=add25=add26=add27=add28=add29=add30=add31=a.data+3*(y*a.dimX+(int)a.dimX-1);
+                if (x + offset+24 >= 0 && x + offset + 31 <= a.dimX - 1)
+                {
+                    add24 = a.data+3*(y*a.dimX+x+offset+24);
+                    add25 = add24+ 3;
+                    add26 = add24 + 6;
+                    add27 = add24 + 9;
+                    add28 = add24  + 12;
+                    add29 = add24  + 15;
+                    add30 = add24  + 18;
+                    add31 = add24  + 21;
+                }
+                else
+                {
+                    add24 = get_pixel(a, x + offset+24, y);
+                    add25 = get_pixel(a, x + offset + 25, y);
+                    add26 = get_pixel(a, x + offset + 26, y);
+                    add27 = get_pixel(a, x + offset + 27, y);
+                    add28 = get_pixel(a, x + offset + 28, y);
+                    add29 = get_pixel(a, x + offset + 29, y);
+                    add30 = get_pixel(a, x + offset + 30, y);
+                    add31 = get_pixel(a, x + offset + 31, y);
+                }
+                */
                 __m256 Data = _mm256_loadu_ps(gv.data + i);
+                // __m256 Data2 = _mm256_loadu_ps(gv.data+i+8);
+                // __m256 Data3 = _mm256_loadu_ps(gv.data+i+16);
+                // __m256 Data4 = _mm256_loadu_ps(gv.data+i+24);
+                
 
                 __m256 Chan0256 = _mm256_setr_ps(add0[0], add1[0], add2[0], add3[0], add4[0],
                                                 add5[0], add6[0], add7[0]);
@@ -241,6 +353,43 @@ Image gb_h(Image a, FVec gv)
                 __m256 Chan2256 = _mm256_setr_ps(add0[2], add1[2], add2[2], add3[2], add4[2],
                                                 add5[2], add6[2], add7[2]);
 
+                // __m256 R2Chan0256 = _mm256_setr_ps(add8[0], add9[0], add10[0], add11[0], add12[0],
+                //                                 add13[0], add14[0], add15[0]);
+                // __m256 R2Chan1256 = _mm256_setr_ps(add8[1], add9[1], add10[1], add11[1], add12[1],
+                //                                 add13[1], add14[1], add15[1]);
+                // __m256 R2Chan2256 = _mm256_setr_ps(add8[2], add9[2], add10[2], add11[2], add12[2],
+                //                                 add13[2], add14[2], add15[2]);
+
+
+                // __m256 R3Chan0256 = _mm256_setr_ps(add16[0], add17[0], add18[0], add19[0], add20[0],
+                //                                 add21[0], add22[0], add23[0]);
+                // __m256 R3Chan1256 = _mm256_setr_ps(add16[1], add17[1], add18[1], add19[1], add20[1],
+                //                                 add21[1], add22[1], add23[1]);
+                // __m256 R3Chan2256 = _mm256_setr_ps(add16[2], add17[2], add18[2], addps(_mm256_mul_ps(R2Chan0256, Data2), Sum0256);
+
+                // Sum1256 = _mm256_add_ps(_mm256_mul_ps(R2Chan1256, Data2), Sum1256);
+                // Sum2256 = _mm256_add_ps(_mm256_mul_ps(R2Chan2256, Data2), Sum2256);
+
+                // Sum0256 = _mm256_add_ps(_mm256_mul_ps(R3Chan0256, Data3), Sum0256);
+                // Sum1256 = _mm256_add_ps(_mm256_mul_ps(R3Chan1256, Data3), Sum1256);
+                // Sum2256 = _mm256_add_ps(_mm256_mul_ps(R3Chan2256, Data3), Sum2256);
+
+                // Sum0256 = _mm256_add_ps(_mm256_mul_ps(R4Chan0256, Data4), Sum0256);
+                // Sum1256 = _mm256_add_ps(_mm256_mul_ps(R4Chan1256, Data4), Sum1256);
+                // Sum2256 = _mm256_add_ps(
+
+                // Sum0256 = _mm256_add_ps(_mm256_mul_ps(R3Chan0256, Data3), Sum0256);
+                // Sum1256 = _mm256_add_ps(_mm256_mul_ps(R3Chan1256, Data3), Sum1256);
+                // Sum2256 = _mm256_add_ps(_mm256_mul_ps(R3Chan2256, Data3), Sum2256);
+
+                // Sum0256 = _mm256_add_ps(_mm256_mul_ps(R4Chan0256, Data4), Sum0256);
+                // Sum1256 = _mm256_add_ps(_mm256_mul_ps(R4Chan1256, Data4), Sum1256);
+                // Sum2256 = _mm256_add_ps(
+
+                // Sum0256 = _mm256_add_ps(_mm256_mul_ps(R3Chan0256, Data3), Sum0256);
+                // Sum1256 = _mm256_add_ps(_mm256_mul_ps(R3Chan1256, Data3), Sum1256);
+                // Sum2256 = _mm256_add_ps(_mm256_mul_ps(R3Chan2256, Data3), Sum2256);
+
                 Sum0256 = _mm256_add_ps(_mm256_mul_ps(Chan0256, Data), Sum0256);
                 Sum1256 = _mm256_add_ps(_mm256_mul_ps(Chan1256, Data), Sum1256);
                 Sum2256 = _mm256_add_ps(_mm256_mul_ps(Chan2256, Data), Sum2256);
@@ -248,6 +397,7 @@ Image gb_h(Image a, FVec gv)
                 _mm256_storeu_ps(Sum0[0],Sum0256);
                 _mm256_storeu_ps(Sum0[1],Sum1256);
                 _mm256_storeu_ps(Sum0[2],Sum2256);
+
                 Sum[0] += Sum0[0][0]+Sum0[0][1]+Sum0[0][2]+Sum0[0][3]+Sum0[0][4]+Sum0[0][5]+Sum0[0][6]+Sum0[0][7];
                 Sum[1] += Sum0[1][0]+Sum0[1][1]+Sum0[1][2]+Sum0[1][3]+Sum0[1][4]+Sum0[1][5]+Sum0[1][6]+Sum0[1][7];
                 Sum[2] += Sum0[2][0]+Sum0[2][1]+Sum0[2][2]+Sum0[2][3]+Sum0[2][4]+Sum0[2][5]+Sum0[2][6]+Sum0[2][7];
@@ -308,7 +458,6 @@ Image gb_v(Image a, FVec gv)
                 float *add5;
                 float *add6;
                 float *add7;
-
                 if(y+offset+7<=0)
                     add0=add1=add2=add3=add4=add5=add6=add7=a.data+ 3*x;
                 else if(y+offset>=(int)a.dimY-1)
