@@ -235,7 +235,7 @@ Image gb_h(Image a, Image r,Image g,Image b,FVec gv)
             __m256 Sum0256 = _mm256_setzero_ps();
             __m256 Sum1256 = _mm256_setzero_ps();
             __m256 Sum2256 = _mm256_setzero_ps();
-
+            #pragma UNROLL(8)
             for (unsigned int i = (int)deta; i < (gv.length-2*deta)/UNROLLING*UNROLLING+deta; i+=UNROLLING)
             {
                 offset = i - ext;
@@ -245,11 +245,11 @@ Image gb_h(Image a, Image r,Image g,Image b,FVec gv)
                 __m256 DataR;
                 __m256 DataG;
                 __m256 DataB;
-
+                /*
                 __m256 DataR2;
                 __m256 DataG2;
                 __m256 DataB2;
-                                
+                */        
                 if(x+offset+7<=0){
                     DataR=_mm256_set1_ps((r.data+y*(int)a.dimX)[0]);
                     DataG=_mm256_set1_ps((g.data+y*(int)a.dimX)[0]);
@@ -289,8 +289,8 @@ Image gb_h(Image a, Image r,Image g,Image b,FVec gv)
                 DataR = _mm256_mul_ps(DataR, Data);
                 DataG = _mm256_mul_ps(DataG, Data);
                 DataB = _mm256_mul_ps(DataB, Data);
-
-                Sum0256 = _mm256_add_ps(DataR, Sum0256);
+                
+                                Sum0256 = _mm256_add_ps(DataR, Sum0256);
                 Sum1256 = _mm256_add_ps(DataG, Sum1256);
                 Sum2256 = _mm256_add_ps(DataB, Sum2256);
                 /*
@@ -332,15 +332,13 @@ Image gb_h(Image a, Image r,Image g,Image b,FVec gv)
                     (b.data+pixel3)[0],(b.data+pixel4)[0],(b.data+pixel5)[0],(b.data+pixel6)[0],\
                     (b.data+pixel7)[0]);
                 }
-
+                Sum0256 = _mm256_add_ps(DataR, Sum0256);
+                Sum1256 = _mm256_add_ps(DataG, Sum1256);
+                Sum2256 = _mm256_add_ps(DataB, Sum2256);
+                //$$#############$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
                 DataR2 = _mm256_mul_ps(DataR2, Data);
                 DataG2 = _mm256_mul_ps(DataG2, Data);
                 DataB2 = _mm256_mul_ps(DataB2, Data);
-
-                Sum0256 = _mm256_add_ps(DataR2, Sum0256);
-                Sum1256 = _mm256_add_ps(DataG2, Sum1256);
-                Sum2256 = _mm256_add_ps(DataB2, Sum2256);
-                //######################################################################
                 Data = _mm256_loadu_ps(gv.data+i+16);
 
                 if(x+offset+23<=0){
@@ -379,15 +377,13 @@ Image gb_h(Image a, Image r,Image g,Image b,FVec gv)
                     (b.data+pixel3)[0],(b.data+pixel4)[0],(b.data+pixel5)[0],(b.data+pixel6)[0],\
                     (b.data+pixel7)[0]);
                 }
-
+                Sum0256 = _mm256_add_ps(DataR2, Sum0256);
+                Sum1256 = _mm256_add_ps(DataG2, Sum1256);
+                Sum2256 = _mm256_add_ps(DataB2, Sum2256);
+                //######################################################$
                 DataR = _mm256_mul_ps(DataR, Data);
                 DataG = _mm256_mul_ps(DataG, Data);
                 DataB = _mm256_mul_ps(DataB, Data);
-
-                Sum0256 = _mm256_add_ps(DataR, Sum0256);
-                Sum1256 = _mm256_add_ps(DataG, Sum1256);
-                Sum2256 = _mm256_add_ps(DataB, Sum2256);
-
 
                 Data = _mm256_loadu_ps(gv.data+i+24);
 
@@ -427,7 +423,10 @@ Image gb_h(Image a, Image r,Image g,Image b,FVec gv)
                     (b.data+pixel3)[0],(b.data+pixel4)[0],(b.data+pixel5)[0],(b.data+pixel6)[0],\
                     (b.data+pixel7)[0]);
                 }
-
+                Sum0256 = _mm256_add_ps(DataR, Sum0256);
+                Sum1256 = _mm256_add_ps(DataG, Sum1256);
+                Sum2256 = _mm256_add_ps(DataB, Sum2256);
+                //################################
                 DataR2 = _mm256_mul_ps(DataR2, Data);
                 DataG2 = _mm256_mul_ps(DataG2, Data);
                 DataB2 = _mm256_mul_ps(DataB2, Data);
@@ -435,8 +434,8 @@ Image gb_h(Image a, Image r,Image g,Image b,FVec gv)
                 Sum0256 = _mm256_add_ps(DataR2, Sum0256);
                 Sum1256 = _mm256_add_ps(DataG2, Sum1256);
                 Sum2256 = _mm256_add_ps(DataB2, Sum2256);
+                
                 */
-
             }
                 _mm256_storeu_ps(Sum0[0],Sum0256);
                 _mm256_storeu_ps(Sum0[1],Sum1256);
