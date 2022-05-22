@@ -235,7 +235,7 @@ Image gb_h(Image a, Image r,Image g,Image b,FVec gv)
             __m256 Sum0256 = _mm256_setzero_ps();
             __m256 Sum1256 = _mm256_setzero_ps();
             __m256 Sum2256 = _mm256_setzero_ps();
-            #pragma UNROLL(8)
+            //#pragma UNROLL(8)
             for (unsigned int i = (int)deta; i < (gv.length-2*deta)/UNROLLING*UNROLLING+deta; i+=UNROLLING)
             {
                 offset = i - ext;
