@@ -1,9 +1,11 @@
 #!/bin/bash
-rm -rf fast_test_record.txt
+rm -rf test_record.txt
 make fast
-for((i=0;i<2;i++))
+make base
+for((i=0;i<20;i++))
 do 
-    echo "----- ${i} run -----" >> fast_test_record.txt
+    echo "----- ${i} run -----" >> test_record.txt
     make fast_test_record
-    echo "" >> fast_test_record.txt
+    make base_test_record
+    echo "" >> test_record.txt
 done

@@ -29,4 +29,11 @@ fast_test: fast
 check_test: check
 	./test_accuracy test_base.jpg test_fast.jpg
 
- 
+fast_test_only:
+	./gbfloat_fast test.jpg test_fast.jpg 0.6 -2.0 2.0 1001 201
+
+fast_test_record:
+	./gbfloat_fast test.jpg test_fast.jpg 0.6 -2.0 2.0 1001 201 >> test_record.txt
+
+base_test_record:
+	./gbfloat_base test.jpg base_fast.jpg 0.6 -2.0 2.0 1001 201 >> test_record.txt
