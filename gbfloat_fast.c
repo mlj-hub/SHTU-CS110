@@ -453,7 +453,6 @@ int main(int argc, char** argv)
     img.data = stbi_loadf(argv[1], &(img.dimX), &(img.dimY), &(img.numChannels), 0);
 
     Image imgOut = apply_gb(img, v);
-    printf("finish apply gb\n");
     stbi_write_jpg(argv[2], imgOut.dimX, imgOut.dimY, imgOut.numChannels, imgOut.data, 90);
     gettimeofday(&stop_time,NULL);
     timersub(&stop_time, &start_time, &elapsed_time); 
