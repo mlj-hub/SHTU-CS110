@@ -58,9 +58,11 @@ Image transpose(Image a){
         for(int y=0;y<(int)a.dimY;y+=BLOCK_SIZE){
             for(int X = x;X<x+BLOCK_SIZE&&X<(int)a.dimX;++X){
                 for(int Y = y;Y<y+BLOCK_SIZE&&Y<(int)a.dimY;++Y){
-                    (b.data+3*(X*b.dimX+Y))[0]=(a.data+3*(Y*a.dimX+X))[0];
-                    (b.data+3*(X*b.dimX+Y))[1]=(a.data+3*(Y*a.dimX+X))[1];
-                    (b.data+3*(X*b.dimX+Y))[2]=(a.data+3*(Y*a.dimX+X))[2];
+                    int data1 = 3*(X*b.dimX+Y); 
+                    int data2 = 3*(Y*a.dimX+X);
+                    (b.data+data1)[0]=(a.data+data2)[0];
+                    (b.data+data1)[1]=(a.data+data2)[1];
+                    (b.data+data1)[2]=(a.data+data2)[2];
                 }
             }
         }
@@ -86,9 +88,11 @@ void get_RGB(Image a,Image * r,Image * g,Image*b){
             {
                 for(int X = x;X<x+BLOCK_SIZE&&X<(int)a.dimX;++X)
                 {
-                    (r->data+(Y*a.dimX+X))[0]=(a.data+3*(Y*a.dimX+X))[0];
-                    (g->data+(Y*a.dimX+X))[0]=(a.data+3*(Y*a.dimX+X))[1];
-                    (b->data+(Y*a.dimX+X))[0]=(a.data+3*(Y*a.dimX+X))[2];
+                    int temp = Y*a.dimX +X;
+                    int mul = 3*temp;
+                    (r->data+temp)[0]=(a.data+mul)[0];
+                    (g->data+temp)[0]=(a.data+mul)[1];
+                    (b->data+temp)[0]=(a.data+mul)[2];
                 }
             }
         }
@@ -251,20 +255,23 @@ Image gb_h(Image a, Image r,Image g,Image b,FVec gv)
                 __m256 DataB2;
                 */        
                 if(x+offset+7<=0){
-                    DataR=_mm256_set1_ps((r.data+y*(int)a.dimX)[0]);
-                    DataG=_mm256_set1_ps((g.data+y*(int)a.dimX)[0]);
-                    DataB=_mm256_set1_ps((b.data+y*(int)a.dimX)[0]);
+                    int temp = y*(int)a.dimX;
+                    DataR=_mm256_set1_ps((r.data+temp)[0]);
+                    DataG=_mm256_set1_ps((g.data+temp)[0]);
+                    DataB=_mm256_set1_ps((b.data+temp)[0]);
                 }
                 else if (x+offset>=(int)a.dimX-1){
-                    DataR=_mm256_set1_ps((r.data+y*(int)a.dimX+(int)a.dimX-1)[0]);
-                    DataG=_mm256_set1_ps((g.data+y*(int)a.dimX+(int)a.dimX-1)[0]);
-                    DataB=_mm256_set1_ps((b.data+y*(int)a.dimX+(int)a.dimX-1)[0]);
+                    int temp = y*(int)a.dimX;
+                    DataR=_mm256_set1_ps((r.data+temp+(int)a.dimX-1)[0]);
+                    DataG=_mm256_set1_ps((g.data+temp+(int)a.dimX-1)[0]);
+                    DataB=_mm256_set1_ps((b.data+temp+(int)a.dimX-1)[0]);
                 }
                 else if (x + offset >= 0 && x + offset + 7 <=(int) a.dimX - 1)
                 {
-                    DataR = _mm256_loadu_ps(r.data+y*(int)a.dimX+x+offset);
-                    DataG = _mm256_loadu_ps(g.data+y*(int)a.dimX+x+offset);
-                    DataB = _mm256_loadu_ps(b.data+y*(int)a.dimX+x+offset);
+                    int temp = y*(int)a.dimX;
+                    DataR = _mm256_loadu_ps(r.data+temp+x+offset);
+                    DataG = _mm256_loadu_ps(g.data+temp+x+offset);
+                    DataB = _mm256_loadu_ps(b.data+temp+x+offset);
                 }
                 else
                 {
@@ -290,7 +297,7 @@ Image gb_h(Image a, Image r,Image g,Image b,FVec gv)
                 DataG = _mm256_mul_ps(DataG, Data);
                 DataB = _mm256_mul_ps(DataB, Data);
                 
-                                Sum0256 = _mm256_add_ps(DataR, Sum0256);
+                Sum0256 = _mm256_add_ps(DataR, Sum0256);
                 Sum1256 = _mm256_add_ps(DataG, Sum1256);
                 Sum2256 = _mm256_add_ps(DataB, Sum2256);
                 /*
