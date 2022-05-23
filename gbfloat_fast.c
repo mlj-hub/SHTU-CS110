@@ -52,8 +52,8 @@ Image transpose(Image a){
     int max_threads = omp_get_max_threads();
 
     omp_set_num_threads(max_threads);
-    // #pragma omp parallel for
-    #pragma omp parallel for schedule(dynamic)
+    #pragma omp parallel for
+    // #pragma omp parallel for schedule(dynamic)
     for(int x=0;x<(int)a.dimX;x+=BLOCK_SIZE){
         for(int y=0;y<(int)a.dimY;y+=BLOCK_SIZE){
             for(int X = x;X<x+BLOCK_SIZE&&X<(int)a.dimX;++X){
@@ -78,8 +78,8 @@ void get_RGB(Image a,Image * r,Image * g,Image*b){
     b->data = malloc(a.dimX*a.dimY*sizeof(float));
     int max_threads = omp_get_max_threads();
     omp_set_num_threads(max_threads);
-    #pragma omp parallel for
-    // #pragma omp parallel for schedule(dynamic)
+    // #pragma omp parallel for
+    #pragma omp parallel for schedule(dynamic)
     for(int y=0;y<(int)a.dimY;y+=BLOCK_SIZE)
     {
         for(int x=0;x<(int)a.dimX;x+=BLOCK_SIZE)
@@ -109,8 +109,8 @@ void get_RGB_n(Image a,Image * r,Image * g,Image*b){
     b->data = malloc(size);
     int max_threads = omp_get_max_threads();
     omp_set_num_threads(max_threads);
-    #pragma omp parallel for
-    // #pragma omp parallel for schedule(dynamic)
+    // #pragma omp parallel for
+    #pragma omp parallel for schedule(dynamic)
     for(int y=0;y<(int)a.dimY;y+=BLOCK_SIZE)
     {
         for(int x=0;x<(int)a.dimX;x+=BLOCK_SIZE)
@@ -133,15 +133,15 @@ void get_RGB_n(Image a,Image * r,Image * g,Image*b){
     int offset2 = 7+a.dimX;
     max_threads = omp_get_max_threads();
     omp_set_num_threads(max_threads);
-    #pragma omp parallel for
-    // #pragma omp parallel for schedule(dynamic)
+    // #pragma omp parallel for
+    #pragma omp parallel for schedule(dynamic)
     for(int i=0;i<r->dimY*(r->dimX);i+=r->dimX){
-        memset(r->data+i,*(r->data+i+8),8*sizeof(float));
-        memset(g->data+i,*(g->data+i+8),8*sizeof(float));
-        memset(b->data+i,*(b->data+i+8),8*sizeof(float));
-        memset(r->data+i+offset1,*(r->data+i+offset2),8*sizeof(float));
-        memset(g->data+i+offset1,*(g->data+i+offset2),8*sizeof(float));
-        memset(b->data+i+offset1,*(b->data+i+offset2),8*sizeof(float));
+        r->data[i]=r->data[i+1]=r->data[i+2]=r->data[i+3]=r->data[i+4]=r->data[i+5]=r->data[i+6]=r->data[i+7]=r->data[i+8];
+        g->data[i]=g->data[i+1]=g->data[i+2]=g->data[i+3]=g->data[i+4]=g->data[i+5]=g->data[i+6]=g->data[i+7]=g->data[i+8];
+        b->data[i]=b->data[i+1]=b->data[i+2]=b->data[i+3]=b->data[i+4]=b->data[i+5]=b->data[i+6]=b->data[i+7]=b->data[i+8];
+        r->data[i+8+a.dimX]=r->data[i+9+a.dimX]=r->data[i+10+a.dimX]=r->data[i+11+a.dimX]=r->data[i+12+a.dimX]=r->data[i+13+a.dimX]=r->data[i+14+a.dimX]=r->data[i+15+a.dimX]=r->data[i+7+a.dimX];
+        g->data[i+8+a.dimX]=g->data[i+9+a.dimX]=g->data[i+10+a.dimX]=g->data[i+11+a.dimX]=g->data[i+12+a.dimX]=g->data[i+13+a.dimX]=g->data[i+14+a.dimX]=g->data[i+15+a.dimX]=g->data[i+7+a.dimX];
+        b->data[i+8+a.dimX]=b->data[i+9+a.dimX]=b->data[i+10+a.dimX]=b->data[i+11+a.dimX]=b->data[i+12+a.dimX]=b->data[i+13+a.dimX]=b->data[i+14+a.dimX]=b->data[i+15+a.dimX]=b->data[i+7+a.dimX];
     }
 }
 
@@ -268,8 +268,8 @@ Image gb_h(Image a, Image r,Image g,Image b,FVec gv)
 // parallel
     int max_threads = omp_get_max_threads();
     omp_set_num_threads(max_threads);
-    // # pragma omp parallel for schedule(dynamic)
-    # pragma omp parallel for
+    # pragma omp parallel for schedule(dynamic)
+    // # pragma omp parallel for
     for (int y = 0; y < (int)a.dimY; ++y)
     {
         for (int x = 0; x < (int)a.dimX; ++x)
@@ -320,26 +320,7 @@ Image gb_h(Image a, Image r,Image g,Image b,FVec gv)
                     DataG = _mm256_loadu_ps(g.data+temp);
                     DataB = _mm256_loadu_ps(b.data+temp);
                 }
-                // else
-                // {
-                //     pixel0=get_pixel_h(a.dimX,x+offset,y);
-                //     pixel1=get_pixel_h(a.dimX,x+offset+1,y);
-                //     pixel2=get_pixel_h(a.dimX,x+offset+2,y);
-                //     pixel3=get_pixel_h(a.dimX,x+offset+3,y);
-                //     pixel4=get_pixel_h(a.dimX,x+offset+4,y);
-                //     pixel5=get_pixel_h(a.dimX,x+offset+5,y);
-                //     pixel6=get_pixel_h(a.dimX,x+offset+6,y);
-                //     pixel7=get_pixel_h(a.dimX,x+offset+7,y);
-                //     DataR = _mm256_setr_ps((r.data+pixel0)[0],(r.data+pixel1)[0],(r.data+pixel2)[0],\
-                //     (r.data+pixel3)[0],(r.data+pixel4)[0],(r.data+pixel5)[0],(r.data+pixel6)[0],\
-                //     (r.data+pixel7)[0]);
-                //     DataG = _mm256_setr_ps((g.data+pixel0)[0],(g.data+pixel1)[0],(g.data+pixel2)[0],\
-                //     (g.data+pixel3)[0],(g.data+pixel4)[0],(g.data+pixel5)[0],(g.data+pixel6)[0],\
-                //     (g.data+pixel7)[0]);
-                //     DataB = _mm256_setr_ps((b.data+pixel0)[0],(b.data+pixel1)[0],(b.data+pixel2)[0],\
-                //     (b.data+pixel3)[0],(b.data+pixel4)[0],(b.data+pixel5)[0],(b.data+pixel6)[0],\
-                //     (b.data+pixel7)[0]);
-                // }
+
                 DataR = _mm256_mul_ps(DataR, Data);
                 DataG = _mm256_mul_ps(DataG, Data);
                 DataB = _mm256_mul_ps(DataB, Data);
@@ -380,7 +361,7 @@ Image apply_gb(Image a, FVec gv)
     // gettimeofday(&start_time,NULL);
 
     Image r,g,b;
-    get_RGB(a,&r,&g,&b);
+    get_RGB_n(a,&r,&g,&b);
     
     // gettimeofday(&stop_time,NULL);
     // timersub(&stop_time, &start_time, &elapsed_time); 
@@ -399,13 +380,13 @@ Image apply_gb(Image a, FVec gv)
     Image test = transpose(o);
     // gettimeofday(&stop_time,NULL);
     // timersub(&stop_time, &start_time, &elapsed_time); 
-    // printf("transpose time: %f \n", elapsed_time.tv_sec+elapsed_time.tv_usec/1000000.0);
+    // printf("transpose time1: %f \n", elapsed_time.tv_sec+elapsed_time.tv_usec/1000000.0);
 
 
     // gettimeofday(&start_time,NULL);
 
     Image rt,gt,bt;
-    get_RGB(test,&rt,&gt,&bt);
+    get_RGB_n(test,&rt,&gt,&bt);
 
     // gettimeofday(&stop_time,NULL);
     // timersub(&stop_time, &start_time, &elapsed_time); 
@@ -425,7 +406,7 @@ Image apply_gb(Image a, FVec gv)
 
     // gettimeofday(&stop_time,NULL);
     // timersub(&stop_time, &start_time, &elapsed_time); 
-    // printf("transpose time: %f \n", elapsed_time.tv_sec+elapsed_time.tv_usec/1000000.0);
+    // printf("transpose time2: %f \n", elapsed_time.tv_sec+elapsed_time.tv_usec/1000000.0);
 
     free(b.data);
     free(test.data);
@@ -472,6 +453,7 @@ int main(int argc, char** argv)
     img.data = stbi_loadf(argv[1], &(img.dimX), &(img.dimY), &(img.numChannels), 0);
 
     Image imgOut = apply_gb(img, v);
+    printf("finish apply gb\n");
     stbi_write_jpg(argv[2], imgOut.dimX, imgOut.dimY, imgOut.numChannels, imgOut.data, 90);
     gettimeofday(&stop_time,NULL);
     timersub(&stop_time, &start_time, &elapsed_time); 
