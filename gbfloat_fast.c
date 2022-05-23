@@ -52,8 +52,8 @@ Image transpose(Image a){
     int max_threads = omp_get_max_threads();
 
     omp_set_num_threads(max_threads);
-    #pragma omp parallel for
-    // #pragma omp parallel for schedule(dynamic)
+    // #pragma omp parallel for
+    #pragma omp parallel for schedule(dynamic)
     for(int x=0;x<(int)a.dimX;x+=BLOCK_SIZE){
         for(int y=0;y<(int)a.dimY;y+=BLOCK_SIZE){
             for(int X = x;X<x+BLOCK_SIZE&&X<(int)a.dimX;++X){
@@ -109,8 +109,8 @@ void get_RGB_n(Image a,Image * r,Image * g,Image*b){
     b->data = malloc(size);
     int max_threads = omp_get_max_threads();
     omp_set_num_threads(max_threads);
-    #pragma omp parallel for
-    // #pragma omp parallel for schedule(dynamic)
+    // #pragma omp parallel for
+    #pragma omp parallel for schedule(dynamic)
     for(int y=0;y<(int)a.dimY;y+=BLOCK_SIZE)
     {
         for(int x=0;x<(int)a.dimX;x+=BLOCK_SIZE)
@@ -133,8 +133,8 @@ void get_RGB_n(Image a,Image * r,Image * g,Image*b){
     int offset2 = 7+a.dimX;
     max_threads = omp_get_max_threads();
     omp_set_num_threads(max_threads);
-    #pragma omp parallel for
-    // #pragma omp parallel for schedule(dynamic)
+    // #pragma omp parallel for
+    #pragma omp parallel for schedule(dynamic)
     for(int i=0;i<r->dimY*(r->dimX);i+=r->dimX){
         r->data[i]=r->data[i+1]=r->data[i+2]=r->data[i+3]=r->data[i+4]=r->data[i+5]=r->data[i+6]=r->data[i+7]=r->data[i+8];
         g->data[i]=g->data[i+1]=g->data[i+2]=g->data[i+3]=g->data[i+4]=g->data[i+5]=g->data[i+6]=g->data[i+7]=g->data[i+8];
@@ -268,8 +268,8 @@ Image gb_h(Image a, Image r,Image g,Image b,FVec gv)
 // parallel
     int max_threads = omp_get_max_threads();
     omp_set_num_threads(max_threads);
-    // # pragma omp parallel for schedule(dynamic)
-    # pragma omp parallel for
+    # pragma omp parallel for schedule(dynamic)
+    // # pragma omp parallel for
     for (int y = 0; y < (int)a.dimY; ++y)
     {
         for (int x = 0; x < (int)a.dimX; ++x)
