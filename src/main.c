@@ -23,6 +23,10 @@ void IO_init(void)
     Lcd_Init(); // LCD init
 }
 
+void draw_deno(){
+    
+}
+
 int main(void)
 {
     IO_init();         // init OLED
