@@ -105,6 +105,8 @@ void LCD_ShowNum(u16 x,u16 y,u16 num,u8 len,u16 color);
 void LCD_ShowNum1(u16 x,u16 y,float num,u8 len,u16 color);
 void LCD_ShowPicture(u16 x1,u16 y1,u16 x2,u16 y2);
 void LCD_ShowLogo(void);
+void LCD_ShowPic(u16 x1, u16 y1, u16 x2, u16 y2, u8* img);
+void LCD_ShowPicture_Part(u16 pic_start_x, u16 pic_start_y, u8* img, u16 start_x,u16 start_y,u16 end_x,u16 end_y, int dimX);
 
 
 //Brush color

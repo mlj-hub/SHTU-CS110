@@ -664,6 +664,26 @@ void LCD_ShowPicture(u16 x1,u16 y1,u16 x2,u16 y2)
 	}			
 }
 
+void LCD_ShowPic(u16 x1, u16 y1, u16 x2, u16 y2, u8* img)
+{
+	LCD_Address_Set(x1, y1, x2, y2);
+	int w = x2 - x1 + 1, h = y2 - y1 + 1;
+  	for(int i = 0;i < w * h * 2; i++)
+	{
+    LCD_WR_DATA8(img[i]);
+	}
+}
+
+void LCD_ShowPicture_Part(u16 pic_start_x, u16 pic_start_y, u8* img, u16 start_x,u16 start_y,u16 end_x,u16 end_y, int dimX){
+	LCD_Address_Set(pic_start_x, pic_start_y, pic_start_x-start_x+end_x-1,pic_start_y-start_y+end_y-1);
+	for (int y=start_y;y<end_y;y++){
+		for(int x=start_x;x<end_x;x++){
+			LCD_WR_DATA8(img[2*(y*dimX+x)]);
+			LCD_WR_DATA8(img[2*(y*dimX+x)+1]);
+		}
+	}
+}
+
 void LCD_ShowLogo(void)
 {
 	int i;
